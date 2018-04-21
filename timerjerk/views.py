@@ -25,7 +25,7 @@ def create_hit(request):
 
 @csrf_exempt
 def assignment_duration(request):
-    hit, hit_type, worker, assignment = self.__get_assignment_info(request)
+    hit, hit_type, worker, assignment = __get_assignment_info(request)
     minutes = float(__get_POST_param(request, 'duration'))
     duration = timedelta(minutes=minutes)
 
@@ -36,12 +36,6 @@ def assignment_duration(request):
         }
     )
     return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
-
-def assignment_submitted(request):
-    hit_type, hit, worker, assignment = __get_assignment_info(request)
-    a.status = Assignment.SUBMITTED
-    a.save()
-    return HttpResponse("Submitted %s." % assignment_id)
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')
