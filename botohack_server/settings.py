@@ -140,12 +140,7 @@ MTURK_SANDBOX = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
 MTURK_LIVE = 'https://mturk-requester.us-east-1.amazonaws.com'
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
-
-# local_settings overrides defaults
-try:
-  from local_settings import *
-except ImportError:
-  pass
+SQS_REGION_NAME = ''
 
 # Activate Django-Heroku.
 #django_heroku.settings(locals())
