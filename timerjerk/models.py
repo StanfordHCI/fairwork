@@ -44,3 +44,18 @@ class AssignmentDuration(models.Model):
 
     def __str__(self):
         return self.duration
+
+class AssignmentAudit(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
+    effective_rate = models.FloatField()
+
+    UNPAID = 'u'
+    PAID = 'p'
+    NO_PAYMENT_NEEDED = 'n'
+    STATUS_CHOICES = (
+        (UNPAID, 'unpaid'),
+        (PAID, 'paid'),
+        (NO_PAYMENT_NEEDED, 'no payment needed')
+    )
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNPAID)
+    timestamp = models.DateTimeField(auto_now=True)
