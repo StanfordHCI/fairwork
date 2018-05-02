@@ -22,42 +22,48 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        sqs_response = self.queue.receive_messages(MaxNumberOfMessages=10)
-        for message in sqs_response:
-            body = json.loads(message.body)
-            events = body['Events']
-            for event in events:
-                event_type = event['EventType']
-                event_timestamp = event['EventTimestamp']
-                hit_id = event['HITId']
-                assignment_id = event['AssignmentId']
-                hit_type_id = event['HITTypeId']
+        total_messages = 0
+        while True:
+            sqs_response = self.queue.receive_messages(MaxNumberOfMessages=10)
+            if len(sqs_response) == 0:
+                break
 
-                amt_response = self.mturk.get_assignment(AssignmentId = assignment_id)
-                worker_id = amt_response['Assignment']['WorkerId']
+            total_messages += len(sqs_response)
+            for message in sqs_response:
+                body = json.loads(message.body)
+                events = body['Events']
+                for event in events:
+                    event_type = event['EventType']
+                    event_timestamp = event['EventTimestamp']
+                    hit_id = event['HITId']
+                    assignment_id = event['AssignmentId']
+                    hit_type_id = event['HITTypeId']
 
-                print("Assignment %s from worker %s in hit %s of hit type %s" % (assignment_id, worker_id, hit_id, hit_type_id))
+                    amt_response = self.mturk.get_assignment(AssignmentId = assignment_id)
+                    worker_id = amt_response['Assignment']['WorkerId']
 
-                ht, ht_created = HITType.objects.get_or_create(
-                    id = hit_type_id
-                )
-                h, h_created = HIT.objects.get_or_create(
-                    id = hit_id,
-                    hit_type = ht
-                )
-                w, w_created = Worker.objects.get_or_create(
-                    id = worker_id
-                )
-                a, a_created = Assignment.objects.get_or_create(
-                    id = assignment_id,
-                    hit = h,
-                    worker = w
-                )
-                a.status = Assignment.SUBMITTED
-                a.save()
+                    print("Assignment %s from worker %s in hit %s of hit type %s" % (assignment_id, worker_id, hit_id, hit_type_id))
 
-            # Delete received message from queue
-            message.delete()
+                    ht, ht_created = HITType.objects.get_or_create(
+                        id = hit_type_id
+                    )
+                    h, h_created = HIT.objects.get_or_create(
+                        id = hit_id,
+                        hit_type = ht
+                    )
+                    w, w_created = Worker.objects.get_or_create(
+                        id = worker_id
+                    )
+                    a, a_created = Assignment.objects.get_or_create(
+                        id = assignment_id,
+                        hit = h,
+                        worker = w
+                    )
+                    a.status = Assignment.SUBMITTED
+                    a.save()
+
+                # Delete received message from queue
+                message.delete()
 
 
-        self.stdout.write(self.style.SUCCESS('Successfully pulled %d messages' % len(sqs_response)))
+        self.stdout.write(self.style.SUCCESS('Pulled %d messages' % total_messages))
