@@ -43,7 +43,7 @@ class AssignmentDuration(models.Model):
     timestamp = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.duration
+        return "%s: %s" % (self.assignment, self.duration)
 
 class AssignmentAudit(models.Model):
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)

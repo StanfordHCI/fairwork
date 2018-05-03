@@ -59,7 +59,7 @@ class Command(BaseCommand):
                         hit = h,
                         worker = w
                     )
-                    a.status = Assignment.SUBMITTED
+                    a.status = Assignment.ACCEPTED
                     a.save()
 
                 # Delete received message from queue
