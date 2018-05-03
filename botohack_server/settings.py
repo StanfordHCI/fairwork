@@ -141,6 +141,7 @@ MTURK_LIVE = 'https://mturk-requester.us-east-1.amazonaws.com'
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
 SQS_REGION_NAME = ''
+MINIMUM_WAGE_PER_HOUR = 11.00
 
 # Activate Django-Heroku.
 #django_heroku.settings(locals())

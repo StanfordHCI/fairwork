@@ -2,6 +2,7 @@ from django.db import models
 
 class HITType(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
+    payment = models.DecimalField(max_digits=6, decimal_places=2)
     def __str__(self):
         return self.id
 
