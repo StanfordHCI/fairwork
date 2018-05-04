@@ -3,6 +3,7 @@ Django settings for botohack_server project.
 """
 
 import os
+from decimal import Decimal
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -141,7 +142,7 @@ MTURK_LIVE = 'https://mturk-requester.us-east-1.amazonaws.com'
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
 SQS_REGION_NAME = ''
-MINIMUM_WAGE_PER_HOUR = 11.00
+MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
 
 # Activate Django-Heroku.
 #django_heroku.settings(locals())
