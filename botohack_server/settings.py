@@ -135,6 +135,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # App-specific settings
+MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
+
 AWS_ACCESS_KEY_ID = ''
 AWS_SECRET_ACCESS_KEY = ''
 USE_SANDBOX = True
@@ -145,7 +147,7 @@ else:
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
 SQS_REGION_NAME = ''
-MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
+
 
 # Activate Django-Heroku.
 #django_heroku.settings(locals())
