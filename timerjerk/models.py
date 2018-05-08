@@ -85,14 +85,14 @@ class AssignmentAudit(models.Model):
         return underpayment
 
     def __str__(self):
-        s = '%s:\n\tBase pay %.2f\n\t' % (self.assignment, self.assignment.hit.hit_type.payment)
+        s = '%s:\n\tBase pay to %s: $%.2f\n\t' % (self.assignment, self.assignment.worker, self.assignment.hit.hit_type.payment)
         if self.estimated_time is None or self.estimated_rate is None:
             s += 'Effective time and rate unknown'
         else:
             s += 'Effective rate $%.2f/hr because it took %s\n\t' % (self.estimated_rate, self.estimated_time)
             if self.is_underpaid():
                 underpayment_ratio = settings.MINIMUM_WAGE_PER_HOUR / self.estimated_rate
-                s += 'Need to multiply base pay by %.2fx to reach $%.2f/hr\n\tBonus %.2f' % (underpayment_ratio, settings.MINIMUM_WAGE_PER_HOUR, self.get_underpayment())
+                s += 'Need to multiply base pay by %.2fx to reach $%.2f/hr\n\tBonus $%.2f' % (underpayment_ratio, settings.MINIMUM_WAGE_PER_HOUR, self.get_underpayment())
             else:
                 s += 'Met or exceeded target rate of $%.2f/hr' % (settings.MINIMUM_WAGE_PER_HOUR)
         return s
