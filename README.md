@@ -14,6 +14,6 @@ python manage.py runserver
 ## Auditing HIT payment
 ```shell
 python manage.py pullnotifications --settings=botohack_server.local_settings
-ate
+
 python manage.py calculaterate --settings=botohack_server.local_settings
 ```
