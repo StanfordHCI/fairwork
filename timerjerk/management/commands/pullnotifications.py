@@ -18,7 +18,7 @@ class Command(BaseCommand):
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         region_name='us-east-1',
-        endpoint_url = settings.MTURK_SANDBOX
+        endpoint_url = settings.MTURK_ENDPOINT
     )
 
     def handle(self, *args, **options):

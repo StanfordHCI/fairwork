@@ -15,13 +15,14 @@ def create_hit(request):
     hit_type_id = __get_POST_param(request, 'hittype_id')
 
     ht, ht_created = HITType.objects.get_or_create(
-        id = hit_type_id
+        id = hit_type_id,
+        payment = __get_POST_param(request, 'reward')
     )
     h, h_created = HIT.objects.get_or_create(
         id = hit_id,
         hit_type = ht
     )
-    return HttpResponse("Created")
+    return HttpResponse("Created HIT %s" % h.id)
 
 @csrf_exempt
 def assignment_duration(request):
