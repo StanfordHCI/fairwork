@@ -33,40 +33,62 @@ class Command(BaseCommand):
                 body = json.loads(message.body)
                 events = body['Events']
 
+                if len(events) > 1:
+                    raise Exception("More than one event in SQS notification. There should only be one.")
+
                 try:
-                    for event in events:
-                        event_type = event['EventType']
-                        event_timestamp = event['EventTimestamp']
-                        hit_id = event['HITId']
-                        assignment_id = event['AssignmentId']
-                        hit_type_id = event['HITTypeId']
+                    event = events[0]
+                    event_type = event['EventType']
+                    event_timestamp = event['EventTimestamp']
+                    hit_id = event['HITId']
+                    assignment_id = event['AssignmentId']
+                    hit_type_id = event['HITTypeId']
 
-                        amt_response = self.mturk.get_assignment(AssignmentId = assignment_id)
-                        worker_id = amt_response['Assignment']['WorkerId']
+                    amt_response = self.mturk.get_assignment(AssignmentId = assignment_id)
+                    worker_id = amt_response['Assignment']['WorkerId']
+                    self.stdout.write("Assignment %s from worker %s in hit %s of hit type %s" % (assignment_id, worker_id, hit_id, hit_type_id))
 
-                        print("Assignment %s from worker %s in hit %s of hit type %s" % (assignment_id, worker_id, hit_id, hit_type_id))
+                    ht, ht_created = HITType.objects.get_or_create(
+                        id = hit_type_id
+                    )
+                    h, h_created = HIT.objects.get_or_create(
+                        id = hit_id,
+                        hit_type = ht
+                    )
+                    w, w_created = Worker.objects.get_or_create(
+                        id = worker_id
+                    )
+                    a, a_created = Assignment.objects.get_or_create(
+                        id = assignment_id,
+                        hit = h,
+                        worker = w
+                    )
 
-                        ht, ht_created = HITType.objects.get_or_create(
-                            id = hit_type_id
-                        )
-                        h, h_created = HIT.objects.get_or_create(
-                            id = hit_id,
-                            hit_type = ht
-                        )
-                        w, w_created = Worker.objects.get_or_create(
-                            id = worker_id
-                        )
-                        a, a_created = Assignment.objects.get_or_create(
-                            id = assignment_id,
-                            hit = h,
-                            worker = w
-                        )
-                        a.status = Assignment.ACCEPTED
-                        a.save()
+                    # Since we can't guarantee that the HIT has been approved yet, we need to checklist
+                    status = amt_response['Assignment']['AssignmentStatus']
+                    if status == 'Submitted':
+                        # Submitted means it hasn't been reviewed yet; leave this one in the queue
+                        # until we know whether it's approved
+                        self.stdout.write('\tNot reviewed yet; leaving in queue')
+                        a.status = Assignment.SUBMITTED
+                    elif status == 'Rejected':
+                        # if it's been rejected, don't include it in the audit:
+                        # presumably there was a good reason
+                        self.stdout.write('\tRejected')
+                        a.status = Assignment.REJECTED
+                        # Delete received message from queue
+                        message.delete()
+                    elif status == 'Approved':
+                        self.stdout.write('\tApproved')
+                        a.status = Assignment.APPROVED
+                        # Delete received message from queue
+                        message.delete()
 
-                    # Delete received message from queue
-                    message.delete()
-                except RequestError as e:
+                    a.save()
+
+                except self.mturk.exceptions.RequestError as e:
+                    self.stderr.write(self.style.ERROR(e))
+                except self.sqs.exceptions.RequestError as e:
                     self.stderr.write(self.style.ERROR(e))
 
 

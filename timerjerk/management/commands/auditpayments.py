@@ -5,6 +5,7 @@ from django.db.models import Avg, Sum
 from statistics import median
 from decimal import Decimal
 import itertools
+
 import boto3
 
 from timerjerk.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit
@@ -37,7 +38,7 @@ class Command(BaseCommand):
 
     def __audit_hits(self):
         # Gets all assignments that have been accepted but don't have an audit yet
-        auditable = Assignment.objects.filter(status=Assignment.ACCEPTED).filter(assignmentaudit__isnull
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).filter(assignmentaudit__isnull
     =True)
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
         for hit_type in hit_type_query:
@@ -76,7 +77,6 @@ class Command(BaseCommand):
                     audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
                 self.stdout.write(str(audit.estimated_rate))
                 audit.full_clean()
-                print(audit)
                 audit.save()
 
 
@@ -96,7 +96,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker, total_unpaid)))
 
             # Construct the message to the worker
-            message = """This requester is using Mechanical Jerk to bring pay rates up to a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Mechanical Jerk does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr.
+            message = """This requester is using Mechanical Jerk (which probably needs a better name) to bring pay rates up to a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Mechanical Jerk does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr.
 
 The tasks being reimbursed:
 """ % (settings.MINIMUM_WAGE_PER_HOUR, settings.MINIMUM_WAGE_PER_HOUR)
@@ -104,7 +104,7 @@ The tasks being reimbursed:
             unpaid_by_hit_type = itertools.groupby(unpaid_tasks, key=lambda x: x.assignment.hit.hit_type)
             for hit_type, hit_type_tasks in unpaid_by_hit_type:
                 tasks = list(hit_type_tasks) # we will reuse, so we need to listify
-                s = "HIT Type %s originally paid $%.2f per task. Estimated time was %s, for an estimated rate of $%.2f/hr. Bonus $%.2f for each of %d HITs to bring the payment to $%.2f. Total: $%.2f bonus\n" % (hit_type.id, hit_type.payment, tasks[0].estimated_time, tasks[0].estimated_rate, tasks[0].get_underpayment(), len(tasks), (hit_type.payment + tasks[0].get_underpayment()),  sum([x.get_underpayment() for x in tasks]))
+                s = "HIT Type %s originally paid $%.2f per task. Estimated time was %s, for an estimated rate of $%.2f/hr. Bonus $%.2f for each of %d HITs to bring the payment to $%.2f each. Total: $%.2f bonus\n" % (hit_type.id, hit_type.payment, tasks[0].estimated_time, tasks[0].estimated_rate, tasks[0].get_underpayment(), len(tasks), (hit_type.payment + tasks[0].get_underpayment()),  sum([x.get_underpayment() for x in tasks]))
                 assignment_ids = [x.assignment.id for x in tasks]
                 s += "\tAssignments: %s\n" % (", ".join(assignment_ids))
                 message += s
@@ -119,5 +119,5 @@ The tasks being reimbursed:
                 for unpaid_task in unpaid_tasks:
                     unpaid_task.status = AssignmentAudit.PAID
                     unpaid_task.save()
-            except RequestError as e:
+            except mturk.exceptions.RequestError as e:
                 self.stderr.write(self.style.ERROR(e))
