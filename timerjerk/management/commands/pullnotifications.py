@@ -44,9 +44,9 @@ class Command(BaseCommand):
                     assignment_id = event['AssignmentId']
                     hit_type_id = event['HITTypeId']
 
+                    self.stdout.write("Assignment %s in hit %s of hit type %s" % (assignment_id, hit_id, hit_type_id))
                     amt_response = self.mturk.get_assignment(AssignmentId = assignment_id)
                     worker_id = amt_response['Assignment']['WorkerId']
-                    self.stdout.write("Assignment %s from worker %s in hit %s of hit type %s" % (assignment_id, worker_id, hit_id, hit_type_id))
 
                     ht, ht_created = HITType.objects.get_or_create(
                         id = hit_type_id
@@ -67,30 +67,35 @@ class Command(BaseCommand):
                     # Since we can't guarantee that the HIT has been approved yet, we need to checklist
                     status = amt_response['Assignment']['AssignmentStatus']
                     if status == 'Submitted':
-                        # Submitted means it hasn't been reviewed yet; leave this one in the queue
-                        # until we know whether it's approved
-                        self.stdout.write('\tNot reviewed yet; leaving in queue')
+                        # Submitted means it hasn't been reviewed yet
+                        # We get this if the client was using Boto 2, which doesn't have approved/rejected
+                        # Ask mturk to get back to us when it's been approved
+                        self.stdout.write('\tNot reviewed yet; setting up notification for approval')
                         a.status = Assignment.SUBMITTED
+                        self.mturk.update_notification_settings(
+                            HITTypeId=hit_type_id,
+                            Notification={
+                                'Destination': settings.SQS_QUEUE,
+                                'Transport': 'SQS',
+                                'Version': '2014-08-15',
+                                'EventTypes': ['AssignmentApproved']
+                            },
+                            Active=True
+                        )
                     elif status == 'Rejected':
                         # if it's been rejected, don't include it in the audit:
                         # presumably there was a good reason
                         self.stdout.write('\tRejected')
                         a.status = Assignment.REJECTED
-                        # Delete received message from queue
-                        message.delete()
                     elif status == 'Approved':
                         self.stdout.write('\tApproved')
                         a.status = Assignment.APPROVED
-                        # Delete received message from queue
-                        message.delete()
 
                     a.save()
+                    message.delete()
 
                 except self.mturk.exceptions.RequestError as e:
                     self.stderr.write(self.style.ERROR(e))
-                except self.sqs.exceptions.RequestError as e:
-                    self.stderr.write(self.style.ERROR(e))
-
 
 
         self.stdout.write(self.style.SUCCESS('Pulled %d messages' % total_messages))
