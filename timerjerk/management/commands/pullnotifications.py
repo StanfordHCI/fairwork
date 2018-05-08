@@ -72,6 +72,9 @@ class Command(BaseCommand):
                         # Ask mturk to get back to us when it's been approved
                         self.stdout.write('\tNot reviewed yet; setting up notification for approval')
                         a.status = Assignment.SUBMITTED
+
+                        # TODO: it's possible that the assignment gets approved in the moment between
+                        # us querying status and us setting up approval notification
                         self.mturk.update_notification_settings(
                             HITTypeId=hit_type_id,
                             Notification={
