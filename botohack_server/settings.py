@@ -137,8 +137,11 @@ STATIC_URL = '/static/'
 # App-specific settings
 AWS_ACCESS_KEY_ID = ''
 AWS_SECRET_ACCESS_KEY = ''
-MTURK_SANDBOX = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
-MTURK_LIVE = 'https://mturk-requester.us-east-1.amazonaws.com'
+USE_SANDBOX = True
+if USE_SANDBOX:
+    MTURK_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
+else:
+    MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
 SQS_REGION_NAME = ''

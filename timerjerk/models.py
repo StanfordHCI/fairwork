@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext as _
 
 
 class HITType(models.Model):
@@ -51,8 +53,7 @@ class AssignmentDuration(models.Model):
 class AssignmentAudit(models.Model):
     assignment = models.OneToOneField(Assignment, on_delete=models.CASCADE)
     estimated_time = models.DurationField(blank=True, null=True)
-    estimated_rate = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
-    underpayment = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    estimated_rate = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
 
     UNPAID = 'u'
     PAID = 'p'
@@ -64,6 +65,13 @@ class AssignmentAudit(models.Model):
     )
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNPAID)
     timestamp = models.DateTimeField(auto_now=True)
+
+    # We need to ensure that the estimated_rate didn't get rounded to $0/hr, which presents problems later
+    def clean(self):
+        super(AssignmentAudit, self).clean()
+
+        if self.estimated_rate == 0:
+            raise ValidationError({'estimated_rate': _('Estimated rate may not be $0/hr. Precision is only two decimal points.')})
 
     def is_underpaid(self):
         # If nobody reported a time, we can't say it's underpaid
