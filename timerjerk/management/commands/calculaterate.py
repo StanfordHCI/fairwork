@@ -33,7 +33,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.__audit_hits()
         self.__pay_audited_hits()
-        # TODO: add payment logging to server, so we get it in the models
 
 
     def __audit_hits(self):
@@ -66,14 +65,20 @@ class Command(BaseCommand):
                 estimated_rate = None
             else:
                 estimated_time = median(hit_durations)
-                estimated_rate = hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))
+                estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
+                if estimated_rate == 0:
+                    estimated_rate = Decimal('0.01') # minimum accepted value
 
             hit_assignments = auditable.filter(hit__in = hit_query)
             for assignment in hit_assignments:
                 audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
                 if not audit.is_underpaid():
                     audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
+                self.stdout.write(str(audit.estimated_rate))
+                audit.full_clean()
+                print(audit)
                 audit.save()
+
 
 
     def __pay_audited_hits(self):
@@ -86,7 +91,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(worker))
             total_unpaid = Decimal(0)
             for unpaid_task in unpaid_tasks:
-                self.stdout.write(unpaid_task)
+                self.stdout.write(str(unpaid_task))
                 total_unpaid += unpaid_task.get_underpayment()
             self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker, total_unpaid)))
 
@@ -107,9 +112,12 @@ The tasks being reimbursed:
             # Send the bonus
             assignment_to_bonus = unpaid_tasks[0] # Arbitrarily attach it to the first one
             token = '%s: %.2f' % (assignment_to_bonus.assignment.id, total_unpaid) # sending the same token prevents AMT from sending the same bonus twice
-            response = self.mturk.send_bonus(WorkerId = worker, BonusAmount = '%.2f' % (total_unpaid), AssignmentId = assignment_to_bonus.assignment.id, Reason = message, UniqueRequestToken = token)
+            try:
+                response = self.mturk.send_bonus(WorkerId = worker, BonusAmount = '%.2f' % (total_unpaid), AssignmentId = assignment_to_bonus.assignment.id, Reason = message, UniqueRequestToken = token)
 
-            # Once the bonus is sent, mark the audits as paid
-            for unpaid_task in unpaid_tasks:
-                unpaid_task.status = AssignmentAudit.PAID
-                unpaid_task.save()
+                # Once the bonus is sent, mark the audits as paid
+                for unpaid_task in unpaid_tasks:
+                    unpaid_task.status = AssignmentAudit.PAID
+                    unpaid_task.save()
+            except RequestError as e:
+                self.stderr.write(self.style.ERROR(e))
