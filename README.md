@@ -7,13 +7,13 @@ from botohack_server.settings import *
 ```
 
 ## Starting the server
-```python
+```shell
 python manage.py runserver
 ```
 
 ## Auditing HIT payment
-```python
+```shell
 python manage.py pullnotifications --settings=botohack_server.local_settings
-
+ate
 python manage.py calculaterate --settings=botohack_server.local_settings
 ```
