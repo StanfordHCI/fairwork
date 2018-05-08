@@ -15,5 +15,5 @@ python manage.py runserver
 ```shell
 python manage.py pullnotifications --settings=botohack_server.local_settings
 
-python manage.py calculaterate --settings=botohack_server.local_settings
+python manage.py auditpayment --settings=botohack_server.local_settings
 ```
