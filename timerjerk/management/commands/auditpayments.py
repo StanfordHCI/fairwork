@@ -119,5 +119,5 @@ The tasks being reimbursed:
                 for unpaid_task in unpaid_tasks:
                     unpaid_task.status = AssignmentAudit.PAID
                     unpaid_task.save()
-            except mturk.exceptions.RequestError as e:
+            except self.mturk.exceptions.RequestError as e:
                 self.stderr.write(self.style.ERROR(e))
