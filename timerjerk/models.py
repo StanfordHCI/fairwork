@@ -27,12 +27,12 @@ class Assignment(models.Model):
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
 
     SUBMITTED = 's'
-    ACCEPTED = 'a'
+    APPROVED = 'a'
     REJECTED = 'r'
     OPEN = 'o'
     STATUS_CHOICES = (
         (SUBMITTED, 'submitted'),
-        (ACCEPTED, 'accepted'),
+        (APPROVED, 'accepted'),
         (REJECTED, 'rejected'),
         (OPEN, 'open'),
     )
