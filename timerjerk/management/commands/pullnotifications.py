@@ -20,6 +20,12 @@ class Command(BaseCommand):
         region_name='us-east-1',
         endpoint_url = settings.MTURK_ENDPOINT
     )
+    mturk_sandbox = boto3.client('mturk',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name='us-east-1',
+        endpoint_url = settings.MTURK_SANDBOX_ENDPOINT
+    )
 
     def handle(self, *args, **options):
         total_messages = 0
@@ -45,8 +51,6 @@ class Command(BaseCommand):
                     hit_type_id = event['HITTypeId']
 
                     self.stdout.write("Assignment %s in hit %s of hit type %s" % (assignment_id, hit_id, hit_type_id))
-                    amt_response = self.mturk.get_assignment(AssignmentId = assignment_id)
-                    worker_id = amt_response['Assignment']['WorkerId']
 
                     ht, ht_created = HITType.objects.get_or_create(
                         id = hit_type_id
@@ -55,6 +59,14 @@ class Command(BaseCommand):
                         id = hit_id,
                         hit_type = ht
                     )
+
+                    if ht.is_sandbox():
+                        mturk_client = self.mturk_sandbox
+                    else:
+                        mturk_client = self.mturk
+
+                    amt_response = mturk_client.get_assignment(AssignmentId = assignment_id)
+                    worker_id = amt_response['Assignment']['WorkerId']
                     w, w_created = Worker.objects.get_or_create(
                         id = worker_id
                     )
@@ -73,9 +85,14 @@ class Command(BaseCommand):
                         self.stdout.write('\tNot reviewed yet; setting up notification for approval')
                         a.status = Assignment.SUBMITTED
 
+                        if ht.is_sandbox():
+                            mturk_client = self.mturk_sandbox
+                        else:
+                            mturk_client = self.mturk
+
                         # TODO: it's possible that the assignment gets approved in the moment between
                         # us querying status and us setting up approval notification
-                        self.mturk.update_notification_settings(
+                        mturk_client.update_notification_settings(
                             HITTypeId=hit_type_id,
                             Notification={
                                 'Destination': settings.SQS_QUEUE,

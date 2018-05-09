@@ -7,17 +7,24 @@ from django.utils.translation import ugettext as _
 class HITType(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
     payment = models.DecimalField(max_digits=6, decimal_places=2)
+    host = models.CharField(max_length=200) # sandbox or not?
+
+    def is_sandbox(self):
+        return "sandbox" in self.host
+
     def __str__(self):
         return self.id
 
 class HIT(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
     hit_type = models.ForeignKey(HITType, on_delete=models.CASCADE)
+
     def __str__(self):
         return self.id
 
 class Worker(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
+    
     def __str__(self):
         return self.id
 
