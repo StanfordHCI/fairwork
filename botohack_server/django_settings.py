@@ -18,7 +18,3 @@ SQS_QUEUE_NAME = os.environ['SQS_QUEUE_NAME']
 SQS_REGION_NAME = os.environ['SQS_REGION_NAME']
 
 django_heroku.settings(locals())
-
-print("Django specific settings loaded.")
-print("Queue: %s" % SQS_QUEUE)
-print("Debug: %s" % DEBUG)
