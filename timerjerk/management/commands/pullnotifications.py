@@ -6,7 +6,7 @@ import boto3
 import json
 
 print("SETTINGS???")
-print(settings.aws_access_key_id)
+print(settings.AWS_ACCESS_KEY_ID)
 
 class Command(BaseCommand):
     help = 'Pulls SQS notifications and updates the database'
