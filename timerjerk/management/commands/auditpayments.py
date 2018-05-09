@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.__audit_hits()
-        self.__pay_audited_hits()
+        #self.__pay_audited_hits()
 
 
     def __audit_hits(self):
