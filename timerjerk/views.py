@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.conf import settings
 
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration
 
 from datetime import timedelta
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the timerjerk index.")
+    return HttpResponse("Hello, world. You're at the timerjerk index. Sandbox is %s" % settings.USE_SANDBOX)
 
 @csrf_exempt
 def create_hit(request):
