@@ -5,6 +5,9 @@ from timerjerk.models import HITType, HIT, Worker, Assignment
 import boto3
 import json
 
+print("SETTINGS???")
+print(settings.aws_access_key_id)
+
 class Command(BaseCommand):
     help = 'Pulls SQS notifications and updates the database'
 
