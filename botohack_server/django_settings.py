@@ -14,3 +14,4 @@ django_heroku.settings(locals())
 
 print("Django specific settings loaded.")
 print("Access key: %s" % AWS_ACCESS_KEY_ID)
+print("Debug: %s" % DEBUG)
