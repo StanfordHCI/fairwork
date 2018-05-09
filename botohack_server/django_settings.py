@@ -11,3 +11,5 @@ TIME_ZONE = 'America/Los_Angeles'
 DATABASES['default'] =  dj_database_url.config()
 
 django_heroku.settings(locals())
+
+print("Django specific settings loaded.")
