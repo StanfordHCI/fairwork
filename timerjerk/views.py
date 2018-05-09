@@ -17,7 +17,8 @@ def create_hit(request):
 
     ht, ht_created = HITType.objects.get_or_create(
         id = hit_type_id,
-        payment = __get_POST_param(request, 'reward')
+        payment = __get_POST_param(request, 'reward'),
+        host = __get_POST_param(request, 'host')
     )
     h, h_created = HIT.objects.get_or_create(
         id = hit_id,

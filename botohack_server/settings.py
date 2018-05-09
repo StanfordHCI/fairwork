@@ -153,11 +153,8 @@ MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
 
 AWS_ACCESS_KEY_ID = ''
 AWS_SECRET_ACCESS_KEY = ''
-USE_SANDBOX = True
-if USE_SANDBOX:
-    MTURK_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
-else:
-    MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
+MTURK_SANDBOX_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
+MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
 SQS_REGION_NAME = ''
