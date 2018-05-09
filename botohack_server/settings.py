@@ -133,7 +133,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, ‘staticfiles’)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # App-specific settings
 MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
