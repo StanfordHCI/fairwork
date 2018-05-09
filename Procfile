@@ -1,1 +1,1 @@
-web: gunicorn botohack_server.wsgi:timerjerk
+web: gunicorn botohack_server.wsgi
