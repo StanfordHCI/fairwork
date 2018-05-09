@@ -74,7 +74,7 @@ class Command(BaseCommand):
                 estimated_time = median(hit_durations)
                 estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
                 if estimated_rate == 0:
-                    estimated_rate = Decimal('0.01') # minimum accepted value
+                    estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
             hit_assignments = auditable.filter(hit__in = hit_query)
             for assignment in hit_assignments:
