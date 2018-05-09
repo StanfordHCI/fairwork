@@ -8,7 +8,7 @@ from .models import HITType, HIT, Worker, Assignment, AssignmentDuration
 from datetime import timedelta
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the timerjerk index. Sandbox is %s" % settings.USE_SANDBOX)
+    return HttpResponse("You're at the timerjerk index. Debug is %s." % settings.DEBUG)
 
 @csrf_exempt
 def create_hit(request):
