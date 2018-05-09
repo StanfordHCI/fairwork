@@ -81,7 +81,6 @@ class Command(BaseCommand):
                 audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
                 if not audit.is_underpaid():
                     audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
-                self.stdout.write(str(audit.estimated_rate))
                 audit.full_clean()
                 audit.save()
 
