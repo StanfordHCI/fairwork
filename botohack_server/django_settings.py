@@ -14,6 +14,7 @@ if USE_SANDBOX:
 else:
     MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 
+
 DATABASES['default'] =  dj_database_url.config()
 
 django_heroku.settings(locals())
