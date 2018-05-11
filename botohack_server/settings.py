@@ -158,7 +158,3 @@ MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 SQS_QUEUE = ''
 SQS_QUEUE_NAME = ''
 SQS_REGION_NAME = ''
-
-
-# Activate Django-Heroku.
-#django_heroku.settings(locals())

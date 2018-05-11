@@ -5,6 +5,9 @@ import os
 
 DEBUG = False
 
+SECURE_SSL_REDIRECT = True
+CSRF_COOKIE_SECURE = True
+
 ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost', 'mechanicaljerk.herokuapp.com']
 
 TIME_ZONE = 'America/Los_Angeles'
