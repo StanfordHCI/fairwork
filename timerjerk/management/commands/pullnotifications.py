@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from timerjerk.models import HITType, HIT, Worker, Assignment
+from timerjerk.models import HITType, HIT, Worker, Assignment, Requester
 
 import boto3
 import json
@@ -14,18 +14,8 @@ class Command(BaseCommand):
         region_name=settings.SQS_REGION_NAME
     )
     queue = sqs.get_queue_by_name(QueueName=settings.SQS_QUEUE_NAME)
-    mturk = boto3.client('mturk',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name='us-east-1',
-        endpoint_url = settings.MTURK_ENDPOINT
-    )
-    mturk_sandbox = boto3.client('mturk',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name='us-east-1',
-        endpoint_url = settings.MTURK_SANDBOX_ENDPOINT
-    )
+
+    mturk = dict() # maintains the Boto client connections
 
     def handle(self, *args, **options):
         total_messages = 0
@@ -42,29 +32,31 @@ class Command(BaseCommand):
                 if len(events) > 1:
                     raise Exception("More than one event in SQS notification. There should only be one.")
 
+
+                event = events[0]
+                event_type = event['EventType']
+                event_timestamp = event['EventTimestamp']
+                hit_id = event['HITId']
+                assignment_id = event['AssignmentId']
+                hit_type_id = event['HITTypeId']
+
+                self.stdout.write("Assignment %s in hit %s of hit type %s" % (assignment_id, hit_id, hit_type_id))
+
+                ht, ht_created = HITType.objects.get_or_create(
+                    id = hit_type_id
+                )
+                h, h_created = HIT.objects.get_or_create(
+                    id = hit_id,
+                    hit_type = ht
+                )
+
+                mturk_clients = get_mturk_connection(ht.requester, self.mturk)
+                if ht.is_sandbox():
+                    mturk_client = mturk_clients['sandbox']
+                else:
+                    mturk_client = mturk_clients['production']
+
                 try:
-                    event = events[0]
-                    event_type = event['EventType']
-                    event_timestamp = event['EventTimestamp']
-                    hit_id = event['HITId']
-                    assignment_id = event['AssignmentId']
-                    hit_type_id = event['HITTypeId']
-
-                    self.stdout.write("Assignment %s in hit %s of hit type %s" % (assignment_id, hit_id, hit_type_id))
-
-                    ht, ht_created = HITType.objects.get_or_create(
-                        id = hit_type_id
-                    )
-                    h, h_created = HIT.objects.get_or_create(
-                        id = hit_id,
-                        hit_type = ht
-                    )
-
-                    if ht.is_sandbox():
-                        mturk_client = self.mturk_sandbox
-                    else:
-                        mturk_client = self.mturk
-
                     amt_response = mturk_client.get_assignment(AssignmentId = assignment_id)
                     worker_id = amt_response['Assignment']['WorkerId']
                     w, w_created = Worker.objects.get_or_create(
@@ -84,11 +76,6 @@ class Command(BaseCommand):
                         # Ask mturk to get back to us when it's been approved
                         self.stdout.write('\tNot reviewed yet; setting up notification for approval')
                         a.status = Assignment.SUBMITTED
-
-                        if ht.is_sandbox():
-                            mturk_client = self.mturk_sandbox
-                        else:
-                            mturk_client = self.mturk
 
                         # TODO: it's possible that the assignment gets approved in the moment between
                         # us querying status and us setting up approval notification
@@ -114,8 +101,30 @@ class Command(BaseCommand):
                     a.save()
                     message.delete()
 
-                except self.mturk.exceptions.RequestError as e:
+                except mturk_client.exceptions.RequestError as e:
                     self.stderr.write(self.style.ERROR(e))
 
 
         self.stdout.write(self.style.SUCCESS('Pulled %d messages' % total_messages))
+
+def get_mturk_connection(requester, mturk):
+    if requester.aws_account in mturk:
+        return mturk[requester.aws_account]
+    else:
+        connection = boto3.client('mturk',
+            aws_access_key_id=requester.key,
+            aws_secret_access_key=requester.secret,
+            region_name='us-east-1',
+            endpoint_url = settings.MTURK_ENDPOINT
+        )
+        connection_sandbox = boto3.client('mturk',
+            aws_access_key_id=requester.key,
+            aws_secret_access_key=requester.secret,
+            region_name='us-east-1',
+            endpoint_url = settings.MTURK_SANDBOX_ENDPOINT
+        )
+        mturk[requester.aws_account] = {
+            'production': connection,
+            'sandbox': connection_sandbox
+        }
+        return mturk[requester.aws_account]
