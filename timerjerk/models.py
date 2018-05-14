@@ -3,11 +3,19 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 
+import fernet_fields
+
+class Requester(models.Model):
+    # EncryptedCharField cannot serve as a primary key or lookup field
+    aws_account = models.CharField(max_length=200)
+    key = fernet_fields.EncryptedCharField(max_length=200)
+    secret = fernet_fields.EncryptedCharField(max_length=200)
 
 class HITType(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
     payment = models.DecimalField(max_digits=6, decimal_places=2)
     host = models.CharField(max_length=200) # sandbox or not?
+    requester = models.ForeignKey(Requester, on_delete=models.CASCADE)
 
     def is_sandbox(self):
         return "sandbox" in self.host
@@ -24,7 +32,7 @@ class HIT(models.Model):
 
 class Worker(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
-    
+
     def __str__(self):
         return self.id
 

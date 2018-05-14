@@ -6,4 +6,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('createhit', views.create_hit, name='createHIT'),
     path('duration', views.assignment_duration, name='duration'),
+    path('requester', views.requester, name='requester'),
 ]
