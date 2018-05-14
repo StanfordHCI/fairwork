@@ -7,7 +7,7 @@ import fernet_fields
 
 class Requester(models.Model):
     # EncryptedCharField cannot serve as a primary key or lookup field
-    aws_account = models.CharField(max_length=200)
+    aws_account = models.CharField(max_length=200, primary_key=True)
     key = fernet_fields.EncryptedCharField(max_length=200)
     secret = fernet_fields.EncryptedCharField(max_length=200)
 
