@@ -15,16 +15,16 @@ class Migration(migrations.Migration):
             name='requester',
             field=models.CharField(max_length=200, default='temp'),
         ),
+        migrations.AlterField(
+            model_name='requester',
+            name='aws_account',
+            field=models.CharField(max_length=200),
+        ),        
         migrations.AddField(
             model_name='requester',
             name='id',
             field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
             preserve_default=False,
-        ),
-        migrations.AlterField(
-            model_name='requester',
-            name='aws_account',
-            field=models.CharField(max_length=200),
         ),
         migrations.AlterField(
             model_name='hittype',
