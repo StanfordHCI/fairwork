@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='hittype',
             name='requester',
-            field=models.CharField(max_length=200),
+            field=models.CharField(max_length=200, default='temp'),
         ),
         migrations.AddField(
             model_name='requester',
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='aws_account',
             field=models.CharField(max_length=200),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='hittype',
             name='requester',
             field=models.ForeignKey(default='temp', on_delete=django.db.models.deletion.CASCADE, to='timerjerk.Requester'),
