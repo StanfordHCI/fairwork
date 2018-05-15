@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='hittype',
             name='requester',
-            field=models.ForeignKey(default='temp', on_delete=django.db.models.deletion.CASCADE, to='timerjerk.Requester'),
+            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='timerjerk.Requester'),
             preserve_default=False,
         ),
     ]
