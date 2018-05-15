@@ -11,14 +11,25 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='requester',
-            name='aws_account',
+            model_name='hittype',
+            name='requester',
             field=models.CharField(max_length=200),
         ),
         migrations.AddField(
             model_name='requester',
             name='id',
             field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            preserve_default=False,
+        ),
+        migrations.AlterField(
+            model_name='requester',
+            name='aws_account',
+            field=models.CharField(max_length=200),
+        ),
+        migrations.AddField(
+            model_name='hittype',
+            name='requester',
+            field=models.ForeignKey(default='temp', on_delete=django.db.models.deletion.CASCADE, to='timerjerk.Requester'),
             preserve_default=False,
         ),
     ]
