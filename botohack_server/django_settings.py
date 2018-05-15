@@ -23,6 +23,12 @@ SQS_QUEUE_NAME = os.environ['SQS_QUEUE_NAME']
 SQS_REGION_NAME = os.environ['SQS_REGION_NAME']
 SECRET_KEY = os.environ['SECRET_KEY']
 
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = os.environ['SENDGRID_USERNAME']
+EMAIL_HOST_PASSWORD = os.environ['SENDGRID_PASSWORD']
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
 django_heroku.settings(locals())
 
 
