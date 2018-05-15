@@ -13,13 +13,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='hittype',
             name='requester',
-            field=models.CharField(max_length=200, default='temp'),
+            field=models.CharField(max_length=200),
         ),
         migrations.AlterField(
             model_name='requester',
             name='aws_account',
             field=models.CharField(max_length=200),
-        ),        
+        ),
         migrations.AddField(
             model_name='requester',
             name='id',
