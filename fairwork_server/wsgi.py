@@ -1,4 +1,4 @@
-fairwork"""
+"""
 WSGI config for fairwork_server project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
