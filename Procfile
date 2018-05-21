@@ -1,1 +1,1 @@
-web: gunicorn botohack_server.wsgi
+web: gunicorn fairwork_server.wsgi
