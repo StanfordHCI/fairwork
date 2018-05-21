@@ -98,7 +98,8 @@ class Command(BaseCommand):
                     total_unpaid = Decimal(0)
                     for unpaid_task in unpaid_tasks:
                         self.stdout.write(str(unpaid_task))
-                        total_unpaid += unpaid_task.get_underpayment()
+                        total_unpaid += unpaid_task.get_underpayment() * 100000
+                        print("WARNING! MASSIVE MULTIPLICATION IN PAYMENT AMOUNT")
                     self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker.id, total_unpaid)))
 
                     # Construct the message to the worker
@@ -134,4 +135,35 @@ class Command(BaseCommand):
                             unpaid_task.status = AssignmentAudit.PAID
                             unpaid_task.save()
                     except mturk_client.exceptions.RequestError as e:
-                        self.stderr.write(self.style.ERROR(e))
+                        if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
+                            self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
+                            self.__notify_insufficient_funds(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
+                        else:
+                            self.stderr.write(self.style.ERROR(e))
+
+    def __notify_insufficient_funds(self, requester, is_sandbox, worker, total_unpaid, assignment_to_bonus):
+        """
+        Tells the worker to tell the requester to deposit more money.
+        We don't have a way to directly notify the requester.
+        """
+
+        subject = "Fair Work bonus of $%.2f pending, but requester out of funds — please notify requester" % total_unpaid
+
+        message = """This is an automated message from the Fair Work script: this requester is trying to bonus you, but they don't have enough funds in their account to send the bonus. Please reply and let them know that they need to deposit more funds.
+
+This requester is using the Fair Work script to ensure pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr. The total bonus will be $%.2f.
+
+We will try to send the bonus again periodically, so you will get paid after they deposit more funds.
+        """ % (settings.MINIMUM_WAGE_PER_HOUR, settings.MINIMUM_WAGE_PER_HOUR, total_unpaid)
+
+        mturk_clients = get_mturk_connection(requester, self.mturk)
+        if is_sandbox:
+            mturk_client = mturk_clients['sandbox']
+        else:
+            mturk_client = mturk_clients['production']
+
+        try:
+            response = mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker.id])
+
+        except mturk_client.exceptions.RequestError as e:
+            self.stderr.write(self.style.ERROR(e))
