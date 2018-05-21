@@ -1,4 +1,5 @@
 # Fair Work server
+You can run this server independently if you'd like to maintain data privacy for the Fair Work script.
 
 Make sure to edit settings, typically by creating a local_settings.py and importing:
 ```python
