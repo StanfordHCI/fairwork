@@ -1,8 +1,10 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.conf import settings
 from django.shortcuts import render
+from django.contrib.staticfiles.storage import staticfiles_storage
+
 
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Requester
 from auditor.management.commands.pullnotifications import get_mturk_connection
@@ -17,12 +19,24 @@ def create_hit(request):
     hit_id = __get_POST_param(request, 'hit_id')
     hit_type_id = __get_POST_param(request, 'hittype_id')
     aws_account = __get_POST_param(request, 'account')
-
+    host = __get_POST_param(request, 'host')
     r = Requester.objects.get(aws_account = aws_account)
+
+    if 'reward' in request.POST:
+        reward = __get_POST_param(request, 'reward')
+    else:
+        mturk = get_mturk_connection(r, dict())
+        if 'sandbox' in host:
+            client = mturk['sandbox']
+        else:
+            client = mturk['production']
+        response = client.get_hit(HITId=hit_id)
+        reward = response['HIT']['Reward']
+
     ht, ht_created = HITType.objects.get_or_create(
         id = hit_type_id,
-        payment = __get_POST_param(request, 'reward'),
-        host = __get_POST_param(request, 'host'),
+        payment = reward,
+        host = host,
         requester = r
     )
     h, h_created = HIT.objects.get_or_create(
@@ -87,12 +101,17 @@ def requester(request):
 
 @csrf_exempt
 def load_js(request):
-    aws_account = request.GET['account']
+    # get the HTML that we want the JS to insert
+    #url = staticfiles_storage.url('fairwork.html')
+    with staticfiles_storage.open('fairwork.html', 'r') as myfile:
+        data = url.read()
 
+    aws_account = request.GET['account']
     context = {
         'AWS_ACCOUNT': aws_account,
         'DURATION_URL': request.build_absolute_uri('duration'),
         'HOME_URL': request.build_absolute_uri('/'),
+        'DIV_HTML': data
     }
     return render(request, 'fairwork.js', context, content_type='application/javascript')
 
@@ -119,6 +138,6 @@ def __get_assignment_info(request):
 
 def __get_POST_param(request, param):
     try:
-        return request.POST[param]
+        return request.POST.get(param)
     except KeyError:
-        raise Http404("%s does not exist" % param)
+        raise HttpResponseBadRequest("%s does not exist" % param)
