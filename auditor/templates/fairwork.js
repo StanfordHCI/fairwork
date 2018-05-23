@@ -140,7 +140,11 @@
 
   // Equivalent of $(document).ready
   document.addEventListener("DOMContentLoaded", function(event) {
-    document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250))
+    document.body.innerHTML += {{ DIV_HTML }};
+
+    document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
+
+    // Do any relevant exchange of keys
     var oReq = new XMLHttpRequest();
     oReq.open("GET", '{{ HOME_URL }}');
     oReq.withCredentials = true;
