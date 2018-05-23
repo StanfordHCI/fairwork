@@ -8,16 +8,17 @@ import json
 class Command(BaseCommand):
     help = 'Pulls SQS notifications and updates the database'
 
-    sqs = boto3.resource('sqs',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.SQS_REGION_NAME
-    )
-    queue = sqs.get_queue_by_name(QueueName=settings.SQS_QUEUE_NAME)
-
+    sqs = None
     mturk = dict() # maintains the Boto client connections
 
     def handle(self, *args, **options):
+        self.sqs = boto3.resource('sqs',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.SQS_REGION_NAME
+        )
+        queue = self.sqs.get_queue_by_name(QueueName=settings.SQS_QUEUE_NAME)
+
         total_messages = 0
         while True:
             sqs_response = self.queue.receive_messages(MaxNumberOfMessages=10)

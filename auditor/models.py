@@ -25,7 +25,7 @@ class HITType(models.Model):
 
 class HIT(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
-    hit_type = models.ForeignKey(HITType, on_delete=models.CASCADE)
+    hit_type = models.ForeignKey(HITType, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return self.id

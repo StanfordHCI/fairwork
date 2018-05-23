@@ -2,8 +2,10 @@ from django.shortcuts import render
 from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.conf import settings
+from django.shortcuts import render
 
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Requester
+from auditor.management.commands.pullnotifications import get_mturk_connection
 
 from datetime import timedelta
 
@@ -32,6 +34,29 @@ def create_hit(request):
 @csrf_exempt
 def assignment_duration(request):
     hit, hit_type, worker, assignment = __get_assignment_info(request)
+    if 'aws_account' in request.POST: # this is coming from JS, where we won't have called create_hit
+        aws_account = __get_POST_param(request, 'aws_account')
+        r = Requester.objects.get(aws_account = aws_account)
+    else:
+        r = hit_type.requester
+    if hit_type is None:
+        mturk = get_mturk_connection(r, dict())
+        host = __get_POST_param(request, 'host')
+        if 'sandbox' in host:
+            client = mturk['sandbox']
+        else:
+            client = mturk['production']
+        response = client.get_hit(HITId=hit.id)
+        ht = HITType(
+            id = response['HIT']['HITTypeId'],
+            payment = response['HIT']['Reward'],
+            host = host,
+            requester = r
+        )
+        ht.save()
+        hit.hit_type = ht
+        hit.save()
+
     minutes = float(__get_POST_param(request, 'duration'))
     duration = timedelta(minutes=minutes)
 
@@ -59,6 +84,19 @@ def requester(request):
         r.save()
 
     return HttpResponse("Requester data received")
+
+@csrf_exempt
+def load_js(request):
+    aws_account = request.GET['account']
+
+    context = {
+        'AWS_ACCOUNT': aws_account,
+        'DURATION_URL': request.build_absolute_uri('duration'),
+        'HOME_URL': request.build_absolute_uri('/'),
+    }
+    return render(request, 'fairwork.js', context, content_type='application/javascript')
+
+
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')

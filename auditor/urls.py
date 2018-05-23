@@ -7,4 +7,5 @@ urlpatterns = [
     path('createhit', views.create_hit, name='createHIT'),
     path('duration', views.assignment_duration, name='duration'),
     path('requester', views.requester, name='requester'),
+    path('fairwork.js', views.load_js, name='load_js'),
 ]
