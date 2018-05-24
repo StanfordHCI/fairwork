@@ -151,6 +151,7 @@
 
     document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
+    /*
     // Do any relevant exchange of keys
     var oReq = new XMLHttpRequest();
     oReq.open("GET", '{{ HOME_URL }}');
@@ -159,6 +160,39 @@
 
     }
     oReq.send();
+    */
+
+    // Register the HIT
+    var assignment_id = getUrlParameter("assignmentId");
+    var worker_id = getUrlParameter("workerId");
+    var hit_id = getUrlParameter("hitId");
+    var aws_account = "{{ AWS_ACCOUNT }}";
+    var is_sandbox = getUrlParameter("turkSubmitTo").includes("sandbox");
+    var host = is_sandbox ? "mechanicalturk.sandbox.amazonaws.com" : "mechanicalturk.amazonaws.com";
+    var data = {
+      'assignment_id': assignment_id,
+      'worker_id': worker_id,
+      'hit_id': hit_id,
+      'host': host,
+      'aws_account': aws_account
+    };
+
+    var http = new XMLHttpRequest();
+    var url = "{{ CREATE_HIT_URL }}";
+    var params = Object.keys(data).map(function(k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+    }).join('&'); // https://stackoverflow.com/a/14525299/2613185
+
+    http.withCredentials = true;
+    http.open("POST", url, true);
+    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    http.onreadystatechange = function() {//Call a function when the state changes.
+        if(http.readyState == 4 && http.status == 200) {
+            console.log(http.responseText);
+        }
+    }
+    http.send(params);
   });
 
 })();

@@ -12,6 +12,7 @@ from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Reques
 from auditor.management.commands.pullnotifications import get_mturk_connection
 
 from datetime import timedelta
+import boto3
 
 @csrf_exempt
 def index(request):
@@ -21,27 +22,50 @@ def index(request):
 def create_hit(request):
     hit_id = __get_POST_param(request, 'hit_id')
     hit_type_id = __get_POST_param(request, 'hittype_id')
-    aws_account = __get_POST_param(request, 'account')
+    aws_account = __get_POST_param(request, 'aws_account')
     host = __get_POST_param(request, 'host')
+    reward = __get_POST_param(request, 'reward')
     r = Requester.objects.get(aws_account = aws_account)
 
-    if 'reward' in request.POST:
+    mturk = get_mturk_connection(r, dict())
+    if 'sandbox' in host:
+        client = mturk['sandbox']
+    else:
+        client = mturk['production']
+
+    if reward is None:
         reward = __get_POST_param(request, 'reward')
     else:
-        mturk = get_mturk_connection(r, dict())
-        if 'sandbox' in host:
-            client = mturk['sandbox']
-        else:
-            client = mturk['production']
         response = client.get_hit(HITId=hit_id)
         reward = response['HIT']['Reward']
 
-    ht, ht_created = HITType.objects.get_or_create(
-        id = hit_type_id,
-        payment = reward,
-        host = host,
-        requester = r
+    if hit_type_id is None:
+        response = client.get_hit(HITId=hit_id)
+        ht = HITType(
+            id = response['HIT']['HITTypeId'],
+            payment = response['HIT']['Reward'],
+            host = host,
+            requester = r
+        )
+        ht.save()
+    else:
+        ht, ht_created = HITType.objects.get_or_create(
+            id = hit_type_id,
+            payment = reward,
+            host = host,
+            requester = r
+        )
+
+    client.update_notification_settings(
+        HITTypeId=ht.id,
+        Notification={
+            'Destination': settings.SQS_QUEUE,
+            'Transport': 'SQS',
+            'Version': '2014-08-15',
+            'EventTypes': [ 'AssignmentApproved' ]
+        }
     )
+
     h, h_created = HIT.objects.get_or_create(
         id = hit_id,
         hit_type = ht
@@ -56,23 +80,6 @@ def assignment_duration(request):
         r = Requester.objects.get(aws_account = aws_account)
     else:
         r = hit_type.requester
-    if hit_type is None:
-        mturk = get_mturk_connection(r, dict())
-        host = __get_POST_param(request, 'host')
-        if 'sandbox' in host:
-            client = mturk['sandbox']
-        else:
-            client = mturk['production']
-        response = client.get_hit(HITId=hit.id)
-        ht = HITType(
-            id = response['HIT']['HITTypeId'],
-            payment = response['HIT']['Reward'],
-            host = host,
-            requester = r
-        )
-        ht.save()
-        hit.hit_type = ht
-        hit.save()
 
     minutes = float(__get_POST_param(request, 'duration'))
     duration = timedelta(minutes=minutes)
@@ -84,6 +91,7 @@ def assignment_duration(request):
         }
     )
     return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
+
 
 @csrf_exempt
 def requester(request):
@@ -117,6 +125,7 @@ def load_js(request):
         'AWS_ACCOUNT': aws_account,
         'DURATION_URL': request.build_absolute_uri('duration'),
         'HOME_URL': request.build_absolute_uri('/'),
+        'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
         'DIV_HTML': html,
         'CSS': css
     }
