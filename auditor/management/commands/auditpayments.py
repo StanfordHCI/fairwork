@@ -98,8 +98,7 @@ class Command(BaseCommand):
                     total_unpaid = Decimal(0)
                     for unpaid_task in unpaid_tasks:
                         self.stdout.write(str(unpaid_task))
-                        total_unpaid += unpaid_task.get_underpayment() * 100000
-                        print("WARNING! MASSIVE MULTIPLICATION IN PAYMENT AMOUNT")
+                        total_unpaid += unpaid_task.get_underpayment()
                     self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker.id, total_unpaid)))
 
                     # Construct the message to the worker
