@@ -68,6 +68,8 @@ CSRF_TRUSTED_ORIGINS = [
     '127.0.0.1:8000'
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 ROOT_URLCONF = 'fairwork_server.urls'
 
 TEMPLATES = [
