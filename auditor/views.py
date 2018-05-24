@@ -106,17 +106,19 @@ def requester(request):
 def load_js(request):
     # get the HTML that we want the JS to insert
 
-    #with staticfiles_storage.open('fairwork.html', 'r') as myfile:
-    #    data = url.read()
-    t = loader.get_template('fairwork.html')
-    data = t.render(dict())[:-1]
+    html_template = loader.get_template('fairwork.html')
+    html = html_template.render(dict())[:-1]
+
+    css_template = loader.get_template('fairwork.css')
+    css = css_template.render(dict())[:-1].replace('\n', ' ')
 
     aws_account = request.GET['account']
     context = {
         'AWS_ACCOUNT': aws_account,
         'DURATION_URL': request.build_absolute_uri('duration'),
         'HOME_URL': request.build_absolute_uri('/'),
-        'DIV_HTML': data
+        'DIV_HTML': html,
+        'CSS': css
     }
     return render(request, 'fairwork.js', context, content_type='application/javascript')
 

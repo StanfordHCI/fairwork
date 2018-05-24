@@ -140,8 +140,13 @@
 
   // Equivalent of $(document).ready
   document.addEventListener("DOMContentLoaded", function(event) {
+    // Add JS and CSS
     {% spaceless %}
     document.body.innerHTML += "{{ DIV_HTML | safe }}";
+    var css = document.createElement("style");
+    css.type = "text/css";
+    css.innerHTML = "{{ CSS | safe }}";
+    document.head.appendChild(css);
     {% endspaceless %}
 
     document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
