@@ -21,7 +21,7 @@ class Command(BaseCommand):
 
         total_messages = 0
         while True:
-            sqs_response = self.queue.receive_messages(MaxNumberOfMessages=10)
+            sqs_response = queue.receive_messages(MaxNumberOfMessages=10)
             if len(sqs_response) == 0:
                 break
 

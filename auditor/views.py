@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.conf import settings
+
+from django.template import loader
 from django.shortcuts import render
 from django.contrib.staticfiles.storage import staticfiles_storage
 
@@ -11,6 +13,7 @@ from auditor.management.commands.pullnotifications import get_mturk_connection
 
 from datetime import timedelta
 
+@csrf_exempt
 def index(request):
     return HttpResponse("You're at the Fair Work server home. Debug is %s." % settings.DEBUG)
 
@@ -102,9 +105,11 @@ def requester(request):
 @csrf_exempt
 def load_js(request):
     # get the HTML that we want the JS to insert
-    #url = staticfiles_storage.url('fairwork.html')
-    with staticfiles_storage.open('fairwork.html', 'r') as myfile:
-        data = url.read()
+
+    #with staticfiles_storage.open('fairwork.html', 'r') as myfile:
+    #    data = url.read()
+    t = loader.get_template('fairwork.html')
+    data = t.render(dict())[:-1]
 
     aws_account = request.GET['account']
     context = {

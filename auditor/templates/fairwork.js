@@ -140,7 +140,9 @@
 
   // Equivalent of $(document).ready
   document.addEventListener("DOMContentLoaded", function(event) {
-    document.body.innerHTML += {{ DIV_HTML }};
+    {% spaceless %}
+    document.body.innerHTML += "{{ DIV_HTML | safe }}";
+    {% endspaceless %}
 
     document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
