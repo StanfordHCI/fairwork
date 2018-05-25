@@ -95,7 +95,7 @@ def assignment_duration(request):
 
 @csrf_exempt
 def requester(request):
-    aws_account = __get_POST_param(request, 'account')
+    aws_account = __get_POST_param(request, 'aws_account')
     key = __get_POST_param(request, 'key')
     secret = __get_POST_param(request, 'secret')
 
@@ -120,7 +120,7 @@ def load_js(request):
     css_template = loader.get_template('fairwork.css')
     css = css_template.render(dict())[:-1].replace('\n', ' ')
 
-    aws_account = request.GET['account']
+    aws_account = request.GET['aws_account']
     context = {
         'AWS_ACCOUNT': aws_account,
         'DURATION_URL': request.build_absolute_uri('duration'),
