@@ -1,5 +1,7 @@
 (function() {
 
+  // TODO: add timeme.js to track time on page, help worker determine it quickly
+
   function reportTime() {
     var time = document.getElementById("fairwork-min").value;
     var assignment_id = getUrlParameter("assignmentId");
