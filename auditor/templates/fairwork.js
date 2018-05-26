@@ -31,7 +31,7 @@
 
     http.onreadystatechange = function() {//Call a function when the state changes.
         if(http.readyState == 4 && http.status == 200) {
-            console.log(http.responseText);
+            // success
         }
     }
     http.send(params);
@@ -166,6 +166,10 @@
 
     // Register the HIT
     var assignment_id = getUrlParameter("assignmentId");
+    if (assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE') {
+      // preview mode
+      return;
+    }
     var worker_id = getUrlParameter("workerId");
     var hit_id = getUrlParameter("hitId");
     var aws_account = "{{ AWS_ACCOUNT }}";
@@ -191,7 +195,7 @@
 
     http.onreadystatechange = function() {//Call a function when the state changes.
         if(http.readyState == 4 && http.status == 200) {
-            console.log(http.responseText);
+            // success
         }
     }
     http.send(params);
