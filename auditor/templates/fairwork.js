@@ -153,17 +153,6 @@
 
     document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
-    /*
-    // Do any relevant exchange of keys
-    var oReq = new XMLHttpRequest();
-    oReq.open("GET", '{{ HOME_URL }}');
-    oReq.withCredentials = true;
-    oReq.onload = function(e) {
-
-    }
-    oReq.send();
-    */
-
     // Register the HIT
     var assignment_id = getUrlParameter("assignmentId");
     if (assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE') {
