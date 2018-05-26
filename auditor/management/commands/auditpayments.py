@@ -102,17 +102,18 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker.id, total_unpaid)))
 
                     # Construct the message to the worker
-                    message = """This requester is using the Fair Work script to ensure pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr.
+                    message = """This requester is using the Fair Work script to ensure pay rates reach a minimum wage of $%.2f/hr. The goal of fair pay is outlined in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr.
 
-        The tasks being reimbursed:
-        """ % (settings.MINIMUM_WAGE_PER_HOUR, settings.MINIMUM_WAGE_PER_HOUR)
+The tasks being reimbursed:
+
+""" % (settings.MINIMUM_WAGE_PER_HOUR, settings.MINIMUM_WAGE_PER_HOUR)
 
                     unpaid_by_hit_type = itertools.groupby(unpaid_tasks, key=lambda x: x.assignment.hit.hit_type)
                     for hit_type, hit_type_tasks in unpaid_by_hit_type:
                         tasks = list(hit_type_tasks) # we will reuse, so we need to listify
                         s = "HIT Type %s originally paid $%.2f per task. Median estimated time across workers was %s, for an estimated rate of $%.2f/hr. Bonus $%.2f for each of %d HITs to bring the payment to $%.2f each. Total: $%.2f bonus\n" % (hit_type.id, hit_type.payment, tasks[0].estimated_time, tasks[0].estimated_rate, tasks[0].get_underpayment(), len(tasks), (hit_type.payment + tasks[0].get_underpayment()),  sum([x.get_underpayment() for x in tasks]))
                         assignment_ids = [x.assignment.id for x in tasks]
-                        s += "\tAssignments: %s\n" % (", ".join(assignment_ids))
+                        s += "\tAssignments: %s\n\n" % (", ".join(assignment_ids))
                         message += s
 
                     # Send the bonus
