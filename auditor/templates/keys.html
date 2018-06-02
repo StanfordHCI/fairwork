@@ -1,0 +1,25 @@
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+<title>Fair Work: AWS Keys</title>
+</head>
+<body>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+Thanks for coming. What are your keys?
+
+<form action="{% url 'update_keys' %}" method="post">
+{% csrf_token %}
+
+<label for="key">AWS Access Key ID (e.g., ACK35XXEXAMPLE)</label>
+<input type="text" name="key" value="" /><br />
+
+<label for="secret">AWS Secret Access Key (e.g., HT2M7EYYYEXAMPLE)</label>
+<input type="text" name="secret" value="" /><br />
+
+<input type="submit" value="Get Fair Work script" />
+</form>
+
+
+</body>

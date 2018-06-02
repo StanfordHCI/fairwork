@@ -6,6 +6,7 @@ from django.conf import settings
 from django.template import loader
 from django.shortcuts import render
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.urls import reverse
 
 
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Requester
@@ -99,14 +100,7 @@ def requester(request):
     key = __get_POST_param(request, 'key')
     secret = __get_POST_param(request, 'secret')
 
-    r, r_created = Requester.objects.get_or_create(
-        aws_account = aws_account
-    )
-    if key != r.key or secret != r.secret:
-        # the user has updated or rotated their AWS keys
-        r.key = key
-        r.secret = secret
-        r.save()
+    __create_or_update_requester(aws_account, key, secret)
 
     return HttpResponse("Requester data received")
 
@@ -131,7 +125,20 @@ def load_js(request):
     }
     return render(request, 'fairwork.js', context, content_type='application/javascript')
 
+def keys(request):
+    return render(request, 'keys.html')
 
+def update_keys(request):
+    key = __get_POST_param(request, 'key')
+    secret = __get_POST_param(request, 'secret')
+
+    client = boto3.client("sts", aws_access_key_id=key, aws_secret_access_key=secret)
+    aws_account = client.get_caller_identity()["Account"]
+    __create_or_update_requester(aws_account, key, secret)
+
+    context = { 'JS_URL': request.build_absolute_uri(reverse('load_js') + '?aws_account=%s' % aws_account) }
+
+    return render(request, 'update_keys.html', context)
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')
@@ -157,3 +164,13 @@ def __get_POST_param(request, param):
         return request.POST.get(param)
     except KeyError:
         raise HttpResponseBadRequest("%s does not exist" % param)
+
+def __create_or_update_requester(aws_account, key, secret):
+    r, r_created = Requester.objects.get_or_create(
+        aws_account = aws_account
+    )
+    if key != r.key or secret != r.secret:
+        # the user has updated or rotated their AWS keys
+        r.key = key
+        r.secret = secret
+        r.save()
