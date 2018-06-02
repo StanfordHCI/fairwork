@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fair Work</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fair Work is ensures that you pay workers fairly, with minimal code change.">
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400|Oswald:400,700' rel='stylesheet' type='text/css'>
+    <link href="static/bootstrap.css" rel="stylesheet">
+    <link href="static/msb.css" rel="stylesheet">
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="static/bootstrap.js"></script>
+</head>
+
+<body>
+    <div id="msbnav" class="navbar navbar-inverse navbar-static-top" role="navigation">
+        <div class="container">
+	  <div class="navbar-brand">
+            <a href=".">Fair Work</a><span class="hidden-sm hidden-xs">&nbsp;&middot;&nbsp;<a href="http://hci.stanford.edu">Stanford HCI</a></span>
+	  </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-9">
+                {% block content %}
+                {% endblock %}
+            </div> <!-- /col-md-9 -->
+
+            <div class="col-md-3">
+                <div class="vital-info" style="margin-top: 0;">
+                    <div><a href="mailto:fairwork@cs.stanford.edu">fairwork@cs.stanford.edu</a></div>
+                    <div><a href="http://www.github.com/StanfordHCI/fairwork">GitHub code</a></div>
+                </div>
+              </div>
+          </div> <!-- /row -->
+
+      </div> <!-- /container -->
+  </body>
+</html>

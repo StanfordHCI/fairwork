@@ -1,16 +1,12 @@
-<html>
-<head>
-<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
-<title>Fair Work: AWS Keys</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
 
 <p>
-Great. Here is your script.
+Success! Below is the JavaScript. Just include this in the HTML for your HIT.
 </p>
 
-<pre><code>
-  &lt;script src=&quot;{{ JS_URL }}&quot;&gt;&lt;/script&gt;
-</code></pre>
+<pre><code>&lt;script src=&quot;{{ JS_URL }}&quot;&gt;&lt;/script&gt;</code></pre>
 
-</body>
+<p><a href="{% url 'keys' %}">Back</a></p>
+{% endblock %}
