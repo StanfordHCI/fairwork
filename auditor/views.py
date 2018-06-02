@@ -17,7 +17,7 @@ import boto3
 
 @csrf_exempt
 def index(request):
-    return HttpResponse("You're at the Fair Work server home. Debug is %s." % settings.DEBUG)
+    return render(request, 'index.html')
 
 @csrf_exempt
 def create_hit(request):
