@@ -1,25 +1,35 @@
-<html>
-<head>
-<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
-<title>Fair Work: AWS Keys</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% block content %}
+  {% if error_message %}<div class="alert alert-warning"><p>{{ error_message }}</p></div>{% endif %}
 
-Thanks for coming. What are your keys?
+  <p>To use Fair Work, we need to know your Amazon AWS credentials. If you don't know what these are, or need to create them, <a href="https://blog.mturk.com/tutorial-setting-up-your-aws-account-to-make-use-of-mturks-api-4e405b8fc8cb">follow Mechanical Turk's tutorial</a>. We store keys encrypted in our database server.</p>
 
-<form action="{% url 'update_keys' %}" method="post">
-{% csrf_token %}
+  <p>After you enter your credentials below, we will return the JavaScript file you can include in your HIT to enable Fair Work.</p>
 
-<label for="key">AWS Access Key ID (e.g., ACK35XXEXAMPLE)</label>
-<input type="text" name="key" value="" /><br />
+  <form action="{% url 'update_keys' %}" method="post">
+  {% csrf_token %}
 
-<label for="secret">AWS Secret Access Key (e.g., HT2M7EYYYEXAMPLE)</label>
-<input type="text" name="secret" value="" /><br />
+  <div class="row">
+    <div class="col-md-5">
+      <label for="key">AWS Access Key ID<br/>(e.g., AKIAIOSFODNN7EXAMPLE)</label>
+    </div>
+    <div class="col-md-7">
+      <input type="text" name="key" value="" placeholder="AWS Access Key ID" />
+    </div>
+  </div>
 
-<input type="submit" value="Get Fair Work script" />
-</form>
+  <div class="row">
+    <div class="col-md-5">
+      <label for="secret">AWS Secret Access Key<br/>(e.g., wJalrXUtnFEMIYEXAMPLEKEY)</label>
+    </div>
+    <div class="col-md-7">
+      <input type="text" name="secret" value="" placeholder="AWS Secret Access Key" />
+    </div>
+  </div>
+
+  <input type="submit" value="Get Fair Work script" />
+  </form>
 
 
-</body>
+{% endblock %}

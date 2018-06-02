@@ -132,9 +132,13 @@ def update_keys(request):
     key = __get_POST_param(request, 'key')
     secret = __get_POST_param(request, 'secret')
 
-    client = boto3.client("sts", aws_access_key_id=key, aws_secret_access_key=secret)
-    aws_account = client.get_caller_identity()["Account"]
-    __create_or_update_requester(aws_account, key, secret)
+    try:
+        client = boto3.client("sts", aws_access_key_id=key, aws_secret_access_key=secret)
+        aws_account = client.get_caller_identity()["Account"]
+        __create_or_update_requester(aws_account, key, secret)
+    except:
+        context = { 'error_message': 'Your AWS keys are incorrect. Please check them and try again.' }
+        return render(request, 'keys.html', context)
 
     context = { 'JS_URL': request.build_absolute_uri(reverse('load_js') + '?aws_account=%s' % aws_account) }
 
