@@ -55,7 +55,7 @@
     }
     var worker_id = getUrlParameter("workerId");
     var hit_id = getUrlParameter("hitId");
-    var submit_to = getUrlParameter("turkSubmitTo");    
+    var submit_to = getUrlParameter("turkSubmitTo");
     var aws_account = "{{ AWS_ACCOUNT }}";
 
     var data = {
@@ -73,6 +73,7 @@
     var iframe = document.createElement('iframe');
     iframe.setAttribute('id', 'fairworkframe');
     iframe.setAttribute('src', 'https://fairwork.herokuapp.com/iframe?' + params);
+    iframe.setAttribute('style', 'margin: 0; padding: 0; border: none; width: 100%; height: 300px;');
     document.body.appendChild(iframe);
 
   });
