@@ -127,6 +127,14 @@ def load_js(request):
     return render(request, 'fairwork.js', context, content_type='application/javascript')
 
 @csrf_exempt
+def iframe_js(request):
+    aws_account = request.GET['aws_account']
+    context = {
+        'AWS_ACCOUNT': aws_account,
+    }
+    return render(request, 'fairwork-iframe.js', context, content_type='application/javascript')    
+
+@csrf_exempt
 @xframe_options_exempt
 def iframe(request):
 
