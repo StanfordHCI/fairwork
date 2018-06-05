@@ -47,7 +47,7 @@ class Assignment(models.Model):
     OPEN = 'o'
     STATUS_CHOICES = (
         (SUBMITTED, 'submitted'),
-        (APPROVED, 'accepted'),
+        (APPROVED, 'approved'),
         (REJECTED, 'rejected'),
         (OPEN, 'open'),
     )
