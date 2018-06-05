@@ -105,34 +105,14 @@ def requester(request):
 
     return HttpResponse("Requester data received")
 
+
 @csrf_exempt
 def load_js(request):
-    # get the HTML that we want the JS to insert
-
-    html_template = loader.get_template('fairwork.html')
-    html = html_template.render(dict())[:-1]
-
-    css_template = loader.get_template('fairwork.css')
-    css = css_template.render(dict())[:-1].replace('\n', ' ')
-
     aws_account = request.GET['aws_account']
     context = {
         'AWS_ACCOUNT': aws_account,
-        'DURATION_URL': request.build_absolute_uri('duration'),
-        'HOME_URL': request.build_absolute_uri('/'),
-        'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
-        'DIV_HTML': html,
-        'CSS': css
     }
     return render(request, 'fairwork.js', context, content_type='application/javascript')
-
-@csrf_exempt
-def iframe_js(request):
-    aws_account = request.GET['aws_account']
-    context = {
-        'AWS_ACCOUNT': aws_account,
-    }
-    return render(request, 'fairwork-iframe.js', context, content_type='application/javascript')
 
 @csrf_exempt
 @xframe_options_exempt
@@ -142,7 +122,7 @@ def iframe(request):
         'HOME_URL': request.build_absolute_uri('/'),
         'CREATE_HIT_URL': request.build_absolute_uri('createhit')
     }
-    return render(request, 'fairwork-merged.html', context)
+    return render(request, 'fairwork.html', context)
 
 def keys(request):
     return render(request, 'keys.html')
