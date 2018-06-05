@@ -11,4 +11,5 @@ urlpatterns = [
     path('keys', views.keys, name='keys'),
     path('update_keys', views.update_keys, name='update_keys'),
     path('iframe', views.iframe, name='iframe'),
+    path('iframe_js', views.iframe_js, name='iframe_js'),    
 ]
