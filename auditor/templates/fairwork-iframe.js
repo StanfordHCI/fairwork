@@ -55,17 +55,15 @@
     }
     var worker_id = getUrlParameter("workerId");
     var hit_id = getUrlParameter("hitId");
+    var submit_to = getUrlParameter("turkSubmitTo");    
     var aws_account = "{{ AWS_ACCOUNT }}";
-    var is_sandbox = getUrlParameter("turkSubmitTo").includes("sandbox");
-    var host = is_sandbox ? "mechanicalturk.sandbox.amazonaws.com" : "mechanicalturk.amazonaws.com";
-
 
     var data = {
-      'assignment_id': assignment_id,
-      'worker_id': worker_id,
-      'hit_id': hit_id,
-      'host': host,
-      'aws_account': aws_account
+      'assignmentId': assignment_id,
+      'workerId': worker_id,
+      'hitId': hit_id,
+      'aws_account': aws_account,
+      'turkSubmitTo': submit_to
     };
 
     var params = Object.keys(data).map(function(k) {
