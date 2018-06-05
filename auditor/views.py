@@ -132,15 +132,12 @@ def iframe_js(request):
     context = {
         'AWS_ACCOUNT': aws_account,
     }
-    return render(request, 'fairwork-iframe.js', context, content_type='application/javascript')    
+    return render(request, 'fairwork-iframe.js', context, content_type='application/javascript')
 
 @csrf_exempt
 @xframe_options_exempt
 def iframe(request):
-
-    aws_account = request.GET['aws_account']
     context = {
-        'AWS_ACCOUNT': aws_account,
         'DURATION_URL': request.build_absolute_uri('duration'),
         'HOME_URL': request.build_absolute_uri('/'),
         'CREATE_HIT_URL': request.build_absolute_uri('createhit')
