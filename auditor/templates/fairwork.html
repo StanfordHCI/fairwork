@@ -216,7 +216,11 @@
         var http = new XMLHttpRequest();
         var url = "{{ CREATE_HIT_URL }}";
         var params = Object.keys(data).map(function(k) {
-          return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+          if (data[k] == null) {
+            return "";
+          } else {
+            return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+          }
         }).join('&'); // https://stackoverflow.com/a/14525299/2613185
 
         http.withCredentials = true;

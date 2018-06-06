@@ -47,7 +47,6 @@
   // Equivalent of $(document).ready
   document.addEventListener("DOMContentLoaded", function(event) {
 
-    // Register the HIT
     var assignment_id = getUrlParameter("assignmentId");
     if (assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE') {
       // preview mode
@@ -66,8 +65,13 @@
       'turkSubmitTo': submit_to
     };
 
+    // Add iframe
     var params = Object.keys(data).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+      if (data[k] == null) {
+        return "";
+      } else {
+        return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+      }
     }).join('&'); // https://stackoverflow.com/a/14525299/2613185
 
     var iframe = document.createElement('iframe');
