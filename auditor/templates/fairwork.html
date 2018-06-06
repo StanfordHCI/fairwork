@@ -174,18 +174,35 @@
 
       // Equivalent of $(document).ready
       document.addEventListener("DOMContentLoaded", function(event) {
-        document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
         // Register the HIT
         var assignment_id = getUrlParameter("assignmentId");
-        if (assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE') {
-          // preview mode
-          return;
-        }
         var worker_id = getUrlParameter("workerId");
         var hit_id = getUrlParameter("hitId");
         var aws_account = getUrlParameter("aws_account");
-        var is_sandbox = getUrlParameter("turkSubmitTo").includes("sandbox");
+        var turk_submit_to = getUrlParameter("turkSubmitTo");
+
+        if (assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE') {
+          // preview mode
+          return;
+        } else if (assignment_id == null) {
+          console.error("Fair Work: assignmentId missing from parameters");
+          return;
+        } else if (worker_id == null) {
+          console.error("Fair Work: workerId missing from parameters");
+          return;
+        } else if (hit_id == null) {
+          console.error("Fair Work: hitId missing from parameters");
+          return;
+        } else if (aws_account == null) {
+          console.error("Fair Work: aws_account missing from parameters");
+          return;
+        } else if (turk_submit_to == null) {
+          console.error("Fair Work: turkSubmitTo missing from parameters");
+          return;
+        }
+
+        var is_sandbox = turk_submit_to.includes("sandbox");
         var host = is_sandbox ? "mechanicalturk.sandbox.amazonaws.com" : "mechanicalturk.amazonaws.com";
         var data = {
           'assignment_id': assignment_id,
@@ -194,6 +211,7 @@
           'host': host,
           'aws_account': aws_account
         };
+
 
         var http = new XMLHttpRequest();
         var url = "{{ CREATE_HIT_URL }}";
@@ -211,6 +229,10 @@
             }
         }
         http.send(params);
+
+        // Now that we've registered the HIT, start listening for timing data
+        document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
+
       });
 
     })();
