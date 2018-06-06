@@ -65,13 +65,17 @@
       'turkSubmitTo': submit_to
     };
 
+    // Filter out the undefined parts of the data
+    data = Object.keys(data)
+    .filter(key => data[key] != null)
+    .reduce((obj, key) => {
+      obj[key] = data[key];
+      return obj;
+    }, {});
+
     // Add iframe
     var params = Object.keys(data).map(function(k) {
-      if (data[k] == null) {
-        return "";
-      } else {
-        return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
-      }
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
     }).join('&'); // https://stackoverflow.com/a/14525299/2613185
 
     var iframe = document.createElement('iframe');
