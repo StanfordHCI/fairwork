@@ -202,8 +202,6 @@
           return;
         }
 
-        return;
-
         var is_sandbox = turk_submit_to.includes("sandbox");
         var host = is_sandbox ? "mechanicalturk.sandbox.amazonaws.com" : "mechanicalturk.amazonaws.com";
         var data = {
@@ -239,6 +237,7 @@
         }
         http.send(params);
 
+        return;
         // Now that we've registered the HIT, start listening for timing data
         document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
