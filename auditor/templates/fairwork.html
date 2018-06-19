@@ -220,6 +220,8 @@
           return obj;
         }, {});
 
+        return;
+
         var http = new XMLHttpRequest();
         var url = "{{ CREATE_HIT_URL }}";
         var params = Object.keys(data).map(function(k) {
@@ -237,7 +239,6 @@
         }
         http.send(params);
 
-        return;
         // Now that we've registered the HIT, start listening for timing data
         document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
