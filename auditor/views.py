@@ -27,6 +27,7 @@ def create_hit(request):
     aws_account = __get_POST_param(request, 'aws_account')
     host = __get_POST_param(request, 'host')
     reward = __get_POST_param(request, 'reward')
+    aws_account = settings.TEMP_ACCOUNT_ID
     r = Requester.objects.get(aws_account = aws_account)
 
     mturk = get_mturk_connection(r, dict())
