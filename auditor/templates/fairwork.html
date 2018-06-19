@@ -202,6 +202,8 @@
           return;
         }
 
+        return;
+
         var is_sandbox = turk_submit_to.includes("sandbox");
         var host = is_sandbox ? "mechanicalturk.sandbox.amazonaws.com" : "mechanicalturk.amazonaws.com";
         var data = {
@@ -211,8 +213,6 @@
           'host': host,
           'aws_account': aws_account
         };
-
-        return;
 
         // Filter out the undefined parts of the data
         data = Object.keys(data)
