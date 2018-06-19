@@ -226,7 +226,7 @@
           return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
         }).join('&'); // https://stackoverflow.com/a/14525299/2613185
 
-        http.withCredentials = true;
+        //http.withCredentials = true;
         http.open("POST", url, true);
         http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
