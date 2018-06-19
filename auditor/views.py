@@ -67,7 +67,7 @@ def create_hit(request):
     #         'Version': '2014-08-15',
     #         'EventTypes': [ 'AssignmentApproved' ]
     #     }
-    )
+    # )
 
     h, h_created = HIT.objects.get_or_create(
         id = hit_id,
