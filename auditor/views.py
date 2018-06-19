@@ -73,8 +73,7 @@ def create_hit(request):
         id = hit_id,
         hit_type = ht
     )
-    return HttpResponseServerError()
-    #return HttpResponse("Created HIT %s" % h.id)
+    return HttpResponse("Created HIT %s" % h.id)
 
 @csrf_exempt
 def assignment_duration(request):
