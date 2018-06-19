@@ -212,6 +212,8 @@
           'aws_account': aws_account
         };
 
+        return;
+
         // Filter out the undefined parts of the data
         data = Object.keys(data)
         .filter(key => data[key] != null)
