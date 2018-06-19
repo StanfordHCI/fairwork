@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404, HttpResponseBadRequest
+from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpResponseServerError
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.conf import settings
@@ -72,7 +72,8 @@ def create_hit(request):
         id = hit_id,
         hit_type = ht
     )
-    return HttpResponse("Created HIT %s" % h.id)
+    return HttpResponseServerError()
+    #return HttpResponse("Created HIT %s" % h.id)
 
 @csrf_exempt
 def assignment_duration(request):
