@@ -51,20 +51,6 @@ def create_hit(request):
         requester = r
     )
 
-    # AWS SQS notifications are broken :(
-    # If you register the notification, the web UI for requesters never updates
-    # Confirmed "wontfix" from Amazon
-    #
-    # client.update_notification_settings(
-    #     HITTypeId=ht.id,
-    #     Notification={
-    #         'Destination': settings.SQS_QUEUE,
-    #         'Transport': 'SQS',
-    #         'Version': '2014-08-15',
-    #         'EventTypes': [ 'AssignmentApproved' ]
-    #     }
-    # )
-
     h, h_created = HIT.objects.get_or_create(
         id = hit_id,
         hit_type = ht
