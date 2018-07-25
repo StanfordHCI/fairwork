@@ -24,6 +24,8 @@ def index(request):
 def create_hit(request):
     hit_id = __get_POST_param(request, 'hit_id')
     hit_type_id = __get_POST_param(request, 'hittype_id')
+    assignment_id = __get_POST_param(request, 'assignment_id')
+    worker_id = __get_POST_param(request, 'worker_id')
     aws_account = __get_POST_param(request, 'aws_account')
     host = __get_POST_param(request, 'host')
     reward = __get_POST_param(request, 'reward')
@@ -35,29 +37,24 @@ def create_hit(request):
     else:
         client = mturk['production']
 
+    response = client.get_hit(HITId=hit_id)
+
     if reward is None:
-        reward = __get_POST_param(request, 'reward')
-    else:
-        response = client.get_hit(HITId=hit_id)
         reward = response['HIT']['Reward']
-
     if hit_type_id is None:
-        response = client.get_hit(HITId=hit_id)
-        ht = HITType(
-            id = response['HIT']['HITTypeId'],
-            payment = response['HIT']['Reward'],
-            host = host,
-            requester = r
-        )
-        ht.save()
-    else:
-        ht, ht_created = HITType.objects.get_or_create(
-            id = hit_type_id,
-            payment = reward,
-            host = host,
-            requester = r
-        )
+        hit_type_id = response['HIT']['HITTypeId']
 
+    ht, ht_created = HITType.objects.get_or_create(
+        id = hit_type_id,
+        payment = reward,
+        host = host,
+        requester = r
+    )
+
+    # AWS SQS notifications are broken :(
+    # If you register the notification, the web UI for requesters never updates
+    # Confirmed "wontfix" from Amazon
+    #
     # client.update_notification_settings(
     #     HITTypeId=ht.id,
     #     Notification={
@@ -72,6 +69,15 @@ def create_hit(request):
         id = hit_id,
         hit_type = ht
     )
+    w, w_created = Worker.objects.get_or_create(
+        id = worker_id
+    )
+    a, a_created = Assignment.objects.get_or_create(
+        id = assignment_id,
+        hit = h,
+        worker = w
+    )
+
     return HttpResponse("Created HIT %s" % h.id)
 
 @csrf_exempt
@@ -111,6 +117,7 @@ def load_js(request):
     aws_account = request.GET['aws_account']
     context = {
         'AWS_ACCOUNT': aws_account,
+        'IFRAME_URL': request.build_absolute_uri('iframe')
     }
     return render(request, 'fairwork.js', context, content_type='application/javascript')
 
