@@ -49,10 +49,11 @@
     var params = Object.keys(data).map(function(k) {
       return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
     }).join('&'); // https://stackoverflow.com/a/14525299/2613185
+    var url = "{{ IFRAME_URL }}" + "?" + params;
 
     var iframe = document.createElement('iframe');
     iframe.setAttribute('id', 'fairworkframe');
-    iframe.setAttribute('src', 'https://fairwork.herokuapp.com/iframe?' + params);
+    iframe.setAttribute('src', url);
     iframe.setAttribute('style', 'margin: 0; padding: 0; border: none; width: 100%; height: 300px;');
     document.body.appendChild(iframe);
 

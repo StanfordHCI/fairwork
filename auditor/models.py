@@ -45,11 +45,13 @@ class Assignment(models.Model):
     APPROVED = 'a'
     REJECTED = 'r'
     OPEN = 'o'
+    ERROR = 'e'
     STATUS_CHOICES = (
         (SUBMITTED, 'submitted'),
         (APPROVED, 'approved'),
         (REJECTED, 'rejected'),
         (OPEN, 'open'),
+        (ERROR, 'error')
     )
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=OPEN)
     timestamp = models.DateTimeField(auto_now=True)
