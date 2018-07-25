@@ -141,7 +141,7 @@ def __get_assignment_info(request):
     worker_id = __get_POST_param(request, 'worker_id')
     assignment_id = __get_POST_param(request, 'assignment_id')
 
-    h, h_created = HIT.objects.get_or_create(
+    h = HIT.objects.get(
         id = hit_id
     )
     ht = h.hit_type
