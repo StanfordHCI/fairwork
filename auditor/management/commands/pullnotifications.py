@@ -1,10 +1,12 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 from auditor.models import HITType, HIT, Worker, Assignment, Requester
 
 import boto3
 import json
+from datetime import timedelta
 
 class Command(BaseCommand):
     help = 'Checks for completed HITs and updates the database'
@@ -48,11 +50,13 @@ class Command(BaseCommand):
                     # keep it in the queue unless the HIT is done
                     try:
                         hit_response = mturk_client.get_hit(HITId = assignment.hit.id)
-                        assignments_remaining = int(hit_response['HIT']['NumberOfAssignmentsPending']) + int(hit_response['HIT']['NumberOfAssignmentsAvailable'])
-                        if assignments_remaining == 0:
-                            # the HIT is done, this assignment was likely a return
-                            self.stderr.write(self.style.ERROR('Assignment %s is not known but also no longer viable --- HIT %s is complete. Likely a returned assignment. Disabling polling for it.' % (assignment.id, assignment.hit.id)))
-                            assignment.status = Assignment.ERROR
+                        assignment_lifetime = hit_response['HIT']['AssignmentDurationInSeconds']
+                        max_time_alive = assignment.timestamp + timedelta(seconds = assignment_lifetime)
+
+                        if timezone.now() > max_time_alive:
+                            # the assignment has timed out, this assignment was likely a return
+                            self.stderr.write(self.style.ERROR('Assignment %s is past its maximum duration. Likely a returned assignment. Disabling polling for it.' % (assignment.id)))
+                            assignment.status = Assignment.EXPIRED
                             assignment.save()
                     except mturk_client.exceptions.RequestError as e2:
                         self.stderr.write(self.style.ERROR(e2))
