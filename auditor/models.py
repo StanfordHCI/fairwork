@@ -46,11 +46,13 @@ class Assignment(models.Model):
     REJECTED = 'r'
     OPEN = 'o'
     ERROR = 'e'
+    EXPIRED = 'x'
     STATUS_CHOICES = (
         (SUBMITTED, 'submitted'),
         (APPROVED, 'approved'),
         (REJECTED, 'rejected'),
         (OPEN, 'open'),
+        (EXPIRED, 'expired'),
         (ERROR, 'error')
     )
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=OPEN)
