@@ -13,7 +13,7 @@ from auditor.management.commands.pullnotifications import get_mturk_connection
 
 """
 Performs the payment audit on the task. Pseudocode:
-- Get accepted assignments that don't have an audit yet. Relies on pullnotifications.py having processed the acceptance notification from SQS.
+- Get accepted assignments that don't have an audit yet. Relies on pullnotifications.py having processed accepted HITs.
 
 - Map from assignments to HITs, and get all HITs in that HITGroup that need auditing. Calculate effective rate for each assignment, then median those to get effective rate for each HIT. Take median across all HITs in the HITGroup that were accepted but not audited yet to determine effective rate for the group under consideration. (Could do this by HIT, but too much variation. Could also do across all HITs in the HITGroup, but if the requester improved the HIT, it will still remember all the old low payments and not reflect the new design, which seems bad.) If effective rate >= min rate, then mark it as OK. Otherwise...
 

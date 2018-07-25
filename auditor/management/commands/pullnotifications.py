@@ -9,7 +9,6 @@ import json
 class Command(BaseCommand):
     help = 'Checks for completed HITs and updates the database'
 
-    sqs = None
     mturk = dict() # maintains the Boto client connections
 
     def handle(self, *args, **options):
