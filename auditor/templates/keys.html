@@ -7,28 +7,12 @@
 
   <p>After you enter your credentials below, we will return the JavaScript file you can include in your HIT to enable Fair Work.</p>
 
-  <form action="{% url 'update_keys' %}" method="post">
-  {% csrf_token %}
-
-  <div class="row">
-    <div class="col-md-5">
-      <label for="key">AWS Access Key ID<br/>(e.g., AKIAIOSFODNN7EXAMPLE)</label>
-    </div>
-    <div class="col-md-7">
-      <input type="text" name="key" value="" placeholder="AWS Access Key ID" />
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-5">
-      <label for="secret">AWS Secret Access Key<br/>(e.g., wJalrXUtnFEMIYEXAMPLEKEY)</label>
-    </div>
-    <div class="col-md-7">
-      <input type="text" name="secret" value="" placeholder="AWS Secret Access Key" />
-    </div>
-  </div>
-
-  <input type="submit" value="Get Fair Work script" />
+  <form action="{% url 'keys' %}" method="post">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+    </table>
+    <input type="submit" value="Get Fair Work script" />
   </form>
 
 

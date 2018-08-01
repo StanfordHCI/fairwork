@@ -10,6 +10,7 @@ class Requester(models.Model):
     aws_account = models.CharField(max_length=200, primary_key=True)
     key = fernet_fields.EncryptedCharField(max_length=200)
     secret = fernet_fields.EncryptedCharField(max_length=200)
+    email = fernet_fields.EncryptedEmailField(blank=True, null=True)
 
 class HITType(models.Model):
     id = models.CharField(max_length=200, primary_key=True)

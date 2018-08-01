@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpResponseServerError
+from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpResponseServerError, HttpResponseRedirect
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.conf import settings
@@ -11,12 +11,14 @@ from django.urls import reverse
 
 
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Requester
+from .forms import RequesterForm
 from auditor.management.commands.pullnotifications import get_mturk_connection
 
 from datetime import timedelta
 import boto3
 
 @csrf_exempt
+@xframe_options_exempt
 def index(request):
     return render(request, 'index.html')
 
@@ -92,8 +94,9 @@ def requester(request):
     aws_account = __get_POST_param(request, 'aws_account')
     key = __get_POST_param(request, 'key')
     secret = __get_POST_param(request, 'secret')
+    email = __get_POST_param(request, 'email')
 
-    __create_or_update_requester(aws_account, key, secret)
+    __create_or_update_requester(aws_account, key, secret, email)
 
     return HttpResponse("Requester data received")
 
@@ -118,23 +121,27 @@ def iframe(request):
     return render(request, 'fairwork.html', context)
 
 def keys(request):
-    return render(request, 'keys.html')
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = RequesterForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            update_keys(form.cleaned_data['key'], form.cleaned_data['secret'], form.cleaned_data['email'], form.aws_account)
+            return HttpResponseRedirect('/script?aws_account=' + form.aws_account)
+    else:
+        form = RequesterForm()
 
-def update_keys(request):
-    key = __get_POST_param(request, 'key')
-    secret = __get_POST_param(request, 'secret')
+    return render(request, 'keys.html', {'form': form})
 
-    try:
-        client = boto3.client("sts", aws_access_key_id=key, aws_secret_access_key=secret)
-        aws_account = client.get_caller_identity()["Account"]
-        __create_or_update_requester(aws_account, key, secret)
-    except:
-        context = { 'error_message': 'Your AWS keys are incorrect. Please check them and try again.' }
-        return render(request, 'keys.html', context)
+def update_keys(key, secret, email, aws_account):
+    __create_or_update_requester(aws_account, key, secret, email)
+    print('updated')
 
+def script(request):
+    aws_account = request.GET.get('aws_account')
     context = { 'JS_URL': request.build_absolute_uri(reverse('load_js') + '?aws_account=%s' % aws_account) }
 
-    return render(request, 'update_keys.html', context)
+    return render(request, 'script.html', context)
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')
@@ -161,7 +168,7 @@ def __get_POST_param(request, param):
     except KeyError:
         raise HttpResponseBadRequest("%s does not exist" % param)
 
-def __create_or_update_requester(aws_account, key, secret):
+def __create_or_update_requester(aws_account, key, secret, email):
     r, r_created = Requester.objects.get_or_create(
         aws_account = aws_account
     )
@@ -169,4 +176,7 @@ def __create_or_update_requester(aws_account, key, secret):
         # the user has updated or rotated their AWS keys
         r.key = key
         r.secret = secret
+        r.save()
+    if email != r.email:
+        r.email = email
         r.save()
