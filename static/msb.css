@@ -1,9 +1,9 @@
 /* general body properties */
 
 body {
-    /* This defaults to Helvetica Neue if the viewer has it installed (e.g., Macs) 
+    /* This defaults to Helvetica Neue if the viewer has it installed (e.g., Macs)
        and use a lighter font weight. If they don't have it, we use a decent font from Google Web Fonts. */
-    
+
     /* Warning: if you want alternate font weights, you need to go back to Google Web Fonts and include them in the collection that gets included via <link> */
     font-weight: 300;
     font-family: 'Helvetica Neue', 'Source Sans Pro', 'Open Sans',Helvetica,Arial,sans-serif;
@@ -169,4 +169,37 @@ h5.title {
 
 .publication-files {
   margin-top: 10px;
+}
+
+form td input {
+  margin-left: 20px;
+}
+
+.errorlist {
+  list-style-type: none;
+  color: red;
+}
+
+.errorlist {
+  padding: 15px;
+  margin-top: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+.errorlist > p,
+.errorlist > ul {
+  margin-bottom: 0;
+}
+.errorlist > p + p {
+  margin-top: 5px;
+}
+.errorlist hr {
+  border-top-color: #f7e1b5;
+}
+.errorlist .alert-link {
+  color: #66512c;
 }
