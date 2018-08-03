@@ -20,6 +20,8 @@ class Command(BaseCommand):
         for assignment in assignments:
             self.stdout.write(assignment.id)
             hit_type = assignment.hit.hit_type
+            self.stdout.write(hit_type.id)
+            self.stdout.write(hit_type.requester.aws_account)
             mturk_clients = get_mturk_connection(hit_type.requester, self.mturk)
             if hit_type.is_sandbox():
                 mturk_client = mturk_clients['sandbox']
