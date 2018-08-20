@@ -4,7 +4,7 @@ from django.db.models import Avg, Sum, F
 from django.core.mail import send_mail
 
 from statistics import median
-from decimal import Decimal
+from decimal import Decimal, ROUND_UP
 import itertools
 
 import boto3
