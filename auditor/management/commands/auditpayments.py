@@ -136,6 +136,8 @@ class Command(BaseCommand):
         total_unpaid = Decimal(0)
         for unpaid_task in assignments_to_bonus:
             total_unpaid += unpaid_task.get_underpayment()
+        # don't shortchange workers --- round up to the nearest cent
+        total_unpaid = total_unpaid.quantize(Decimal('0.01', context=decimal.Context(rounding=decimal.ROUND_UP)))
         return total_unpaid
 
     def __audit_list_message(self, assignments_to_bonus, is_worker, is_html):
@@ -159,7 +161,8 @@ class Command(BaseCommand):
         for hit_type in hit_types:
             hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
             s = "<li>" if is_html else ""
-            s += "HIT Type %s originally paid $%.2f per task. Median estimated time across workers was %s, for an estimated rate of $%.2f/hr. Bonus $%.2f for each of %d assignments to bring the payment to $%.2f each. Total: $%.2f bonus." % (hit_type.id, hit_type.payment, hittype_assignments[0].estimated_time, hittype_assignments[0].estimated_rate, hittype_assignments[0].get_underpayment(), len(hittype_assignments), (hit_type.payment + hittype_assignments[0].get_underpayment()),  sum([x.get_underpayment() for x in hittype_assignments]))
+            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = hittype_assignments[0].estimated_time, paymentrate = hittype_assignments[0].estimated_rate, bonus = hittype_assignments[0].get_underpayment().normalize(), num_assignments = len(hittype_assignments), paymentrevised = (hit_type.payment + hittype_assignments[0].get_underpayment()).normalize(), self.__get_underpayment(hittype_assignments))
+            s += summary
             s += "<ul>" if is_html else "\n"
 
             hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
