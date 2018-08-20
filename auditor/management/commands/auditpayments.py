@@ -137,7 +137,7 @@ class Command(BaseCommand):
         for unpaid_task in assignments_to_bonus:
             total_unpaid += unpaid_task.get_underpayment()
         # don't shortchange workers --- round up to the nearest cent
-        total_unpaid = total_unpaid.quantize(Decimal('0.01', context=decimal.Context(rounding=decimal.ROUND_UP)))
+        total_unpaid = total_unpaid.quantize(Decimal('0.01', context=decimal.Context(rounding=ROUND_UP)))
         return total_unpaid
 
     def __audit_list_message(self, assignments_to_bonus, is_worker, is_html):
