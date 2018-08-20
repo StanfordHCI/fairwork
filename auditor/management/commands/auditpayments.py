@@ -161,7 +161,7 @@ class Command(BaseCommand):
         for hit_type in hit_types:
             hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
             s = "<li>" if is_html else ""
-            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = hittype_assignments[0].estimated_time, paymentrate = hittype_assignments[0].estimated_rate, bonus = hittype_assignments[0].get_underpayment().normalize(), num_assignments = len(hittype_assignments), paymentrevised = (hit_type.payment + hittype_assignments[0].get_underpayment()).normalize(), self.__get_underpayment(hittype_assignments))
+            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = hittype_assignments[0].estimated_time, paymentrate = hittype_assignments[0].estimated_rate, bonus = hittype_assignments[0].get_underpayment().normalize(), num_assignments = len(hittype_assignments), paymentrevised = (hit_type.payment + hittype_assignments[0].get_underpayment()).normalize(), totalbonus = self.__get_underpayment(hittype_assignments))
             s += summary
             s += "<ul>" if is_html else "\n"
 
