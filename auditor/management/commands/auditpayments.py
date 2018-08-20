@@ -4,7 +4,8 @@ from django.db.models import Avg, Sum, F
 from django.core.mail import send_mail
 
 from statistics import median
-from decimal import Decimal, ROUND_UP
+import decimal
+from decimal import Decimal
 import itertools
 
 import boto3
@@ -137,7 +138,7 @@ class Command(BaseCommand):
         for unpaid_task in assignments_to_bonus:
             total_unpaid += unpaid_task.get_underpayment()
         # don't shortchange workers --- round up to the nearest cent
-        total_unpaid = total_unpaid.quantize(Decimal('0.01', context=decimal.Context(rounding=ROUND_UP)))
+        total_unpaid = total_unpaid.quantize(Decimal('0.01', context=decimal.Context(rounding=decimal.ROUND_UP)))
         return total_unpaid
 
     def __audit_list_message(self, assignments_to_bonus, is_worker, is_html):
