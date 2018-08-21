@@ -105,9 +105,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Worker: %s' % worker.id))
         total_unpaid = self.__get_underpayment(assignments_to_bonus)
 
-        # if it's nonzero, send at least a cent
-        if total_unpaid > Decimal('0.0') and total_unpaid < Decimal('0.01'):
-            total_unpaid = Decimal('0.01')
         self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker.id, total_unpaid)))
 
         # Send the bonus
@@ -147,11 +144,7 @@ class Command(BaseCommand):
         for unpaid_task in assignments_to_bonus:
             total_unpaid += unpaid_task.get_underpayment()
         # don't shortchange workers --- round up to the nearest cent
-        print('-a-')
-        print(total_unpaid)
-        total_unpaid = total_unpaid.quantize(Decimal('0.01', context=decimal.Context(rounding=decimal.ROUND_UP)))
-        print(total_unpaid)
-        print('-/a-')
+        total_unpaid = math.ceil(total_unpaid * Decimal('100.0')) / Decimal('100.0')
         return total_unpaid
 
     def __audit_list_message(self, assignments_to_bonus, is_worker, is_html):
