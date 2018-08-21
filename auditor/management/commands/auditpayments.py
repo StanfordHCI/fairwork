@@ -165,8 +165,9 @@ class Command(BaseCommand):
 
             underpayment = hittype_assignments[0].get_underpayment()
             paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
+            time_nomicroseconds = str(hittype_assignments[0].estimated_time).split(".")[0]
 
-            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = str(hittype_assignments[0].estimated_time), paymentrate = hittype_assignments[0].estimated_rate, bonus = underpayment.quantize(Decimal('1.00')) if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000')), num_assignments = len(hittype_assignments), paymentrevised = paymentrevised.quantize(Decimal('1.00')) if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000')), totalbonus = self.__get_underpayment(hittype_assignments))
+            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = underpayment.quantize(Decimal('1.00')) if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000')), num_assignments = len(hittype_assignments), paymentrevised = paymentrevised.quantize(Decimal('1.00')) if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000')), totalbonus = self.__get_underpayment(hittype_assignments))
             s += summary
             s += "<ul>" if is_html else "\n"
 
