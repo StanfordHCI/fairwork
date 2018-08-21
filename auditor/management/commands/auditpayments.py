@@ -132,7 +132,7 @@ class Command(BaseCommand):
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
                 self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
                 self.__notify_insufficient_funds(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
-            else if e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
+            elif e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
                 # They already paid it, mark it as done
                 for unpaid_task in assignments_to_bonus:
                     unpaid_task.status = AssignmentAudit.PAID
