@@ -104,6 +104,9 @@ class Command(BaseCommand):
         # How much do we owe them?
         self.stdout.write(self.style.WARNING('Worker: %s' % worker.id))
         total_unpaid = self.__get_underpayment(assignments_to_bonus)
+        # if it's nonzero, send at least a cent
+        if total_unpaid > Decimal('0.0') and total_unpaid < Decimal('0.01'):
+            total_unpaid = Decimal('0.01')
         self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker.id, total_unpaid)))
 
         # Send the bonus
@@ -129,6 +132,11 @@ class Command(BaseCommand):
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
                 self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
                 self.__notify_insufficient_funds(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
+            else if e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
+                # They already paid it, mark it as done
+                for unpaid_task in assignments_to_bonus:
+                    unpaid_task.status = AssignmentAudit.PAID
+                    unpaid_task.save()
             else:
                 self.stderr.write(self.style.ERROR(e))
 
