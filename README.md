@@ -11,6 +11,12 @@ from fairwork_server.settings import *
 python manage.py runserver --settings=fairwork_server.local_settings
 ```
 
+Or using local SSH:
+```shell
+python manage.py runsslserver --settings=fairwork_server.local_settings --cert
+ificate ../localhost.crt --key ../localhost.key
+```
+
 ## Auditing HIT payment
 ```shell
 python manage.py pullnotifications --settings=fairwork_server.local_settings
