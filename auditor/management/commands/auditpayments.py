@@ -33,6 +33,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.__audit_hits()
         self.__pay_audited_hits()
+        self.__notify_requesters()
 
 
     def __audit_hits(self):
@@ -77,8 +78,12 @@ class Command(BaseCommand):
                 audit.full_clean()
                 audit.save()
 
+            return auditable
 
 
+    ###
+    ### Pay the HITs that need to be paid
+    ###
     def __pay_audited_hits(self):
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
@@ -94,7 +99,7 @@ class Command(BaseCommand):
 
                 requester_to_bonus = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
 
-                self.__notify_requester(requester, requester_to_bonus)
+                #self.__notify_requester(requester, requester_to_bonus)
 
                 workers = Worker.objects.filter(assignment__assignmentaudit__in = requester_to_bonus).distinct()
                 for worker in workers:
@@ -129,7 +134,7 @@ class Command(BaseCommand):
                 unpaid_task.save()
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
-                self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
+                self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying."))
                 self.__notify_insufficient_funds(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
             elif e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
                 # They already paid it, mark it as done
@@ -143,10 +148,35 @@ class Command(BaseCommand):
     def __get_underpayment(self, assignments_to_bonus):
         total_unpaid = Decimal(0)
         for unpaid_task in assignments_to_bonus:
-            total_unpaid += unpaid_task.get_underpayment()
+            underpayment = unpaid_task.get_underpayment()
+            if underpayment is not None:
+                total_unpaid += underpayment
         # don't shortchange workers --- round up to the nearest cent
         total_unpaid = math.ceil(total_unpaid * Decimal('100.0')) / Decimal('100.0')
         return total_unpaid
+
+
+
+    def __notify_requesters(self):
+        audits = AssignmentAudit.objects.filter(message_sent = False)
+        requesters = Requester.objects.filter(hittype__hit__assignment__assignmentaudit__in = audits).distinct()
+        for requester in requesters:
+            requester_audit = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
+            self.__notify_requester(requester, requester_audit)
+
+    def __notify_requester(self, requester, requester_audit):
+        email = requester.email
+        self.stdout.write(email)
+        plain_message = self.__audit_list_message(requester_audit, False, False)
+        html_message = self.__audit_list_message(requester_audit, False, True)
+        self.stdout.write(plain_message)
+
+        subject = "Fair Work: Mechanical Turk bonuses sent for $%.2f" % self.__get_underpayment(requester_audit)
+        send_mail(subject, plain_message, 'fairwork@cs.stanford.edu', [email], fail_silently=False, html_message=html_message)
+
+        for audit in requester_audit:
+            audit.message_sent = True
+            audit.save()
 
     def __audit_list_message(self, assignments_to_bonus, is_worker, is_html):
         total_unpaid = self.__get_underpayment(assignments_to_bonus)
@@ -171,12 +201,17 @@ class Command(BaseCommand):
             s = "<li>" if is_html else ""
 
             underpayment = hittype_assignments[0].get_underpayment()
-            paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
             time_nomicroseconds = str(hittype_assignments[0].estimated_time).split(".")[0]
-            bonus = underpayment.quantize(Decimal('1.000')).normalize() if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000'))
-            paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
+            if underpayment is None:
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. No workers reported time elapsed for this HIT, so effective rate cannot be estimated. No bonuses will be sent.".format(hittype = hit_type.id, payment = hit_type.payment)
+            elif underpayment <= Decimal('0.00'):
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. No bonus necessary.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate)
+            else:
+                paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
+                bonus = underpayment.quantize(Decimal('1.000')).normalize() if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000'))
+                paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
 
-            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), paymentrevised = paymentrevised, totalbonus = self.__get_underpayment(hittype_assignments))
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), paymentrevised = paymentrevised, totalbonus = self.__get_underpayment(hittype_assignments))
             s += summary
             s += "<ul>" if is_html else "\n"
 
@@ -195,21 +230,11 @@ class Command(BaseCommand):
             message += s
         return message
 
-    def __notify_requester(self, requester, assignments_to_bonus):
-        email = requester.email
-        self.stdout.write(email)
-        plain_message = self.__audit_list_message(assignments_to_bonus, False, False)
-        html_message = self.__audit_list_message(assignments_to_bonus, False, True)
-        self.stdout.write(plain_message)
-
-        subject = "Fair Work: Mechanical Turk bonuses sent for $%.2f" % self.__get_underpayment(assignments_to_bonus)
-        send_mail(subject, plain_message, 'fairwork@cs.stanford.edu', [email], fail_silently=False, html_message=html_message)
-
 
     def __notify_insufficient_funds(self, requester, is_sandbox, worker, total_unpaid, assignment_to_bonus):
         """
         Tells the worker to tell the requester to deposit more money.
-        We don't have a way to directly notify the requester.
+        Then, emails the requester.
         """
 
         subject = "Fair Work bonus of $%.2f pending, but requester out of funds — please notify requester" % total_unpaid
