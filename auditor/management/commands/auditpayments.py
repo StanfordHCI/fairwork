@@ -106,6 +106,10 @@ class Command(BaseCommand):
                     assignments_to_bonus = requester_to_bonus.filter(assignment__worker = worker).distinct()
                     self.__bonus_worker(worker, assignments_to_bonus, requester, is_sandbox)
 
+                # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
+                still_unpaid = assignments_to_bonus.filter(status = AssignmentAudit.UNPAID)
+                self.__notify_insufficient_funds_requester(requester, still_unpaid)
+
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
         # How much do we owe them?
         self.stdout.write(self.style.WARNING('Worker: %s' % worker.id))
@@ -135,7 +139,7 @@ class Command(BaseCommand):
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
                 self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying."))
-                self.__notify_insufficient_funds(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
+                self.__notify_insufficient_funds_worker(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
             elif e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
                 # They already paid it, mark it as done
                 for unpaid_task in assignments_to_bonus:
@@ -231,7 +235,7 @@ class Command(BaseCommand):
         return message
 
 
-    def __notify_insufficient_funds(self, requester, is_sandbox, worker, total_unpaid, assignment_to_bonus):
+    def __notify_insufficient_funds_worker(self, requester, is_sandbox, worker, total_unpaid, assignment_to_bonus):
         """
         Tells the worker to tell the requester to deposit more money.
         Then, emails the requester.
@@ -257,3 +261,15 @@ We will try to send the bonus again periodically, so you will get paid after the
 
         except mturk_client.exceptions.RequestError as e:
             self.stderr.write(self.style.ERROR(e))
+
+    def __notify_insufficient_funds_requester(self, requester, unpaid_assignments):
+        total_underpaid = self.__get_underpayment(unpaid_assignments)
+        total_deposit = total_underpaid * Decimal('1.20') # AMT bonus fee rate
+        subject = "Error: Fair Work bonuses are pending but you are out of funds. Please deposit $%.2f." % total_deposit
+        message = """This is an automated message from the Fair Work script: you have underpaid workers and need to bonus them, but you don't have enough funds in your account to send the bonus. You need to send bonuses totaling $%.2f, but with Mechanical Turk's fee, you need to deposit $%.2f to have enough funds to send those bonuses. Please deposit more funds, and we will automatically retry in roughly 24 hours.
+
+We are sending you this note because you are using the Fair Work script to ensure Mechanical Turk pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid.
+        """ % (total_underpaid, total_deposit, settings.MINIMUM_WAGE_PER_HOUR)
+
+        send_mail(subject, message, 'fairwork@cs.stanford.edu', [requester.email], fail_silently=False)
+        self.stdout.write(message)
