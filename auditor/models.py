@@ -84,6 +84,7 @@ class AssignmentAudit(models.Model):
         (NO_PAYMENT_NEEDED, 'no payment needed')
     )
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNPAID)
+    message_sent = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now=True)
 
     # We need to ensure that the estimated_rate didn't get rounded to $0/hr, which presents problems later
