@@ -62,10 +62,9 @@ def create_hit(request):
     )
     # AMT will sometimes reuse assignment IDs if an assignment
     # gets returned, so we need to update instead of crashing
-    a, a_created = Assignment.objects.get_or_create(
+    a, a_created = Assignment.objects.update_or_create(
         id = assignment_id,
-        hit = h,
-        worker = w
+        defaults = {'hit': h, 'worker': w}
     )
 
     return HttpResponse("Created HIT %s" % h.id)
