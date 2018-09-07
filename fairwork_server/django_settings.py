@@ -8,7 +8,7 @@ DEBUG = False
 SECURE_SSL_REDIRECT = True
 CSRF_COOKIE_SECURE = True
 
-ADMINS = [(os.environ['ADMIN_NAME'], os.environ['ADMIN_EMAIL'])]
+ADMINS = [(os.environ['ADMIN_NAME'], os.environ['ADMIN_EMAIL']), ]
 
 ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost', 'fairwork.herokuapp.com']
 
@@ -25,6 +25,8 @@ EMAIL_HOST_USER = os.environ['SENDGRID_USERNAME']
 EMAIL_HOST_PASSWORD = os.environ['SENDGRID_PASSWORD']
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.environ['ADMIN_EMAIL']
+SERVER_EMAIL = os.environ['ADMIN_EMAIL']
 
 django_heroku.settings(locals())
 

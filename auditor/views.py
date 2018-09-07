@@ -60,6 +60,8 @@ def create_hit(request):
     w, w_created = Worker.objects.get_or_create(
         id = worker_id
     )
+    # AMT will sometimes reuse assignment IDs if an assignment
+    # gets returned, so we need to update instead of crashing
     a, a_created = Assignment.objects.get_or_create(
         id = assignment_id,
         hit = h,
