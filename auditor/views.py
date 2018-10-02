@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpResponseServerError, HttpResponseRedirect
+from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpResponseServerError, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.conf import settings
@@ -25,7 +25,7 @@ def index(request):
 @csrf_exempt
 def create_hit(request):
     hit_id = __get_POST_param(request, 'hit_id')
-    hit_type_id = __get_POST_param(request, 'hittype_id')
+    hit_type_id = __get_POST_param(request, 'hit_type_id')
     assignment_id = __get_POST_param(request, 'assignment_id')
     worker_id = __get_POST_param(request, 'worker_id')
     aws_account = __get_POST_param(request, 'aws_account')
@@ -67,7 +67,40 @@ def create_hit(request):
         defaults = {'hit': h, 'worker': w}
     )
 
-    return HttpResponse("Created HIT %s" % h.id)
+    return JsonResponse({
+        'status': 'success',
+        'host': host,
+        'hit_id': h.id,
+        'hit_type_id': ht.id
+    })
+
+@csrf_exempt
+def most_recent_report(request):
+    hit_id = __get_POST_param(request, 'hit_id')
+    hit_type_id = __get_POST_param(request, 'hit_type_id')
+    host = __get_POST_param(request, 'host')
+
+    ht = HITType.objects.get(
+        id = hit_type_id,
+        host = host,
+    )
+    h = HIT.objects.get(
+        id = hit_id,
+        hit_type = ht
+    )
+
+    most_recent_report = AssignmentDuration.objects.filter(assignment__hit__hit_type = ht).order_by('-timestamp').first()
+    if most_recent_report is None:
+        return JsonResponse( {
+            'assignment': None,
+            'duration': None
+        })
+    else:
+        return JsonResponse( {
+            'assignment': most_recent_report.assignment.id,
+            'duration': most_recent_report.duration
+        })
+
 
 @csrf_exempt
 def assignment_duration(request):
@@ -117,7 +150,8 @@ def iframe(request):
     context = {
         'DURATION_URL': request.build_absolute_uri('duration'),
         'HOME_URL': request.build_absolute_uri('/'),
-        'CREATE_HIT_URL': request.build_absolute_uri('createhit')
+        'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
+        'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent')
     }
     return render(request, 'fairwork.html', context)
 

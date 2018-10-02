@@ -154,6 +154,15 @@
         }, wait);
       });
 
+      function setLastTime(duration) {
+        var last = document.getElementById('lasttimelink');
+        last.innerHTML = "Last time: " + duration + " minutes";
+        last.onclick = function() {
+          document.getElementById('fairwork-min').value = duration;
+          reportTime();
+        }
+      }
+
 
       // Equivalent of $(document).ready
       document.addEventListener("DOMContentLoaded", function(event) {
@@ -215,7 +224,29 @@
 
         http.onreadystatechange = function() {//Call a function when the state changes.
             if(http.readyState == 4 && http.status == 200) {
-                // success
+                var result = JSON.parse(http.responseText)
+                console.log(result);
+
+                // TODO: turn this into a promise architecture
+                // On success, get the most recent time report and autopopulate it
+                var httpRecent = new XMLHttpRequest();
+                var recentUrl = "{{ MOST_RECENT_REPORT_URL }}";
+                var recentParams = Object.keys(result).map(function(k) {
+                  return encodeURIComponent(k) + '=' + encodeURIComponent(result[k])
+                }).join('&'); // https://stackoverflow.com/a/14525299/2613185
+                console.log(recentParams);
+                httpRecent.open("POST", recentUrl, true);
+                httpRecent.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                httpRecent.onreadystatechange = function() {//Call a function when the state changes.
+                    if(httpRecent.readyState == 4 && httpRecent.status == 200) {
+                      // success
+                      var response = JSON.parse(httpRecent.responseText);
+                      var duration = moment.duration(response['duration']).asMinutes();
+
+                      setLastTime(duration);
+                    }
+                }
+                httpRecent.send(recentParams);
             }
         }
         http.send(params);
@@ -228,6 +259,7 @@
     })();
 
   </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
 </head>
 
 <body>
@@ -239,7 +271,8 @@
       <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Any needed bonuses are sent out daily.</p>
 
       <form>
-        <p><input id='fairwork-min' name='fairwork-min' type='text' /> minutes (e.g., 1.5, 2, 60)</p>
+        <div><input id='fairwork-min' name='fairwork-min' type='text' /> minutes (e.g., 1.5, 2, 60)</div>
+        <div><span id="lasttime"><a id="lasttimelink" href="#">Last time</a></span></div>
       </form>
     </div>
   </div>
