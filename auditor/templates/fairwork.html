@@ -247,7 +247,6 @@
         http.onreadystatechange = function() {//Call a function when the state changes.
             if(http.readyState == 4 && http.status == 200) {
                 var result = JSON.parse(http.responseText)
-                console.log(result);
 
                 // TODO: turn this into a promise architecture
                 // On success, get the most recent time report and autopopulate it
@@ -256,7 +255,6 @@
                 var recentParams = Object.keys(result).map(function(k) {
                   return encodeURIComponent(k) + '=' + encodeURIComponent(result[k])
                 }).join('&'); // https://stackoverflow.com/a/14525299/2613185
-                console.log(recentParams);
                 httpRecent.open("POST", recentUrl, true);
                 httpRecent.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 httpRecent.onreadystatechange = function() {//Call a function when the state changes.
