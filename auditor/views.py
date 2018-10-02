@@ -140,7 +140,8 @@ def load_js(request):
     aws_account = request.GET['aws_account']
     context = {
         'AWS_ACCOUNT': aws_account,
-        'IFRAME_URL': request.build_absolute_uri('iframe')
+        'IFRAME_URL': request.build_absolute_uri('iframe'),
+        'FAIRWORK_DOMAIN': request.build_absolute_uri('/')
     }
     return render(request, 'fairwork.js', context, content_type='application/javascript')
 
