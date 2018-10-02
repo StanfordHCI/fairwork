@@ -7,6 +7,7 @@ urlpatterns = [
     path('createhit', views.create_hit, name='createHIT'),
     path('duration', views.assignment_duration, name='duration'),
     path('requester', views.requester, name='requester'),
+    path('mostrecent', views.most_recent_report, name='mostrecent'),
     path('fairwork.js', views.load_js, name='load_js'),
     path('iframe', views.iframe, name='iframe'),
     path('keys', views.keys, name='keys'),
