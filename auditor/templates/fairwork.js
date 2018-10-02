@@ -16,6 +16,29 @@
     }
   }
 
+  // Add the timer script to the parent page, not to the Fair Work iframe
+  function addTimerScript() {
+    var newScript = document.createElement("script");
+    newScript.onload = function() {
+      // Register the timer for estimated time spent
+      TimeMe.initialize({
+          currentPageName: getUrlParameter("assignmentId"), // current page
+          idleTimeoutInSeconds: 30 // seconds
+      });
+      window.setInterval(checkEstimatedTime, 1000);
+    }
+    document.head.appendChild(newScript);
+    newScript.src = "https://cdnjs.cloudflare.com/ajax/libs/TimeMe.js/2.0.0/timeme.min.js";
+  }
+
+  function checkEstimatedTime() {
+    var timeInSeconds = TimeMe.getTimeOnCurrentPageInSeconds();
+    document.getElementById('fairworkframe').contentWindow.postMessage({
+      'status': 'estimatedTime',
+      'value': timeInSeconds
+    }, '{{ FAIRWORK_DOMAIN }}');
+  }
+
   // Equivalent of $(document).ready
   document.addEventListener("DOMContentLoaded", function(event) {
 
@@ -56,6 +79,7 @@
     iframe.setAttribute('src', url);
     iframe.setAttribute('style', 'margin: 0; padding: 0; border: none; width: 100%; height: 300px;');
     document.body.appendChild(iframe);
+    iframe.onload = addTimerScript;
 
   });
 

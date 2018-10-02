@@ -156,12 +156,33 @@
 
       function setLastTime(duration) {
         var last = document.getElementById('lasttimelink');
-        last.innerHTML = "Last time: " + duration + " minutes";
+        last.innerHTML = "Last time: " + duration + " minute" + (duration == 1 ? "" : "s");
         last.onclick = function() {
           document.getElementById('fairwork-min').value = duration;
           reportTime();
         }
         last.style.display = "block";
+      }
+
+      function receiveMessage(message) {
+        if ((event.origin === "https://workersandbox.mturkcontent.com" || event.origin === "https://mturkcontent.com") && event.data['status'] === "estimatedTime") {
+          updateEstimatedTime(message.data['value']);
+        }
+      }
+
+      function updateEstimatedTime(estimated) {
+        var minutes = estimated / 60;
+        var roundedMinutes = Math.floor(minutes);
+        if (estimated % 60 >= 30) {
+          roundedMinutes = roundedMinutes + 0.5;
+        }
+        var estimatedTime = document.getElementById('estimatedtimelink')
+        estimatedTime.innerHTML = 'Estimated time: ' + roundedMinutes + ' minute' + (roundedMinutes == 1 ? "" : "s");
+        estimatedTime.onclick = function() {
+          document.getElementById('fairwork-min').value = roundedMinutes;
+          reportTime();
+        }
+
       }
 
 
@@ -253,9 +274,11 @@
         }
         http.send(params);
 
+        // Listen for TimeMe messages
+        window.addEventListener("message", receiveMessage, false);
+
         // Now that we've registered the HIT, start listening for timing data
         document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
-
       });
 
     })();
@@ -274,6 +297,7 @@
 
       <form>
         <div><input id='fairwork-min' name='fairwork-min' type='text' /> minutes (e.g., 1.5, 2, 60)</div>
+        <div><span id="estimatedtime"><a id="estimatedtimelink" href="#">Estimated time</a></span></div>
         <div><span id="lasttime"><a id="lasttimelink" href="#" style="display: none;">Last time</a></span></div>
       </form>
     </div>
