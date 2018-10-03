@@ -108,6 +108,7 @@ class Command(BaseCommand):
 
                 # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
                 still_unpaid = assignments_to_bonus.filter(status = AssignmentAudit.UNPAID)
+                still_unpaid = still_unpaid.all() # refreshes the queryset from the DB, since we just changed payment status of a bunch of items
                 self.__notify_insufficient_funds_requester(requester, still_unpaid)
 
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
