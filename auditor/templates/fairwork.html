@@ -1,5 +1,6 @@
 <html>
 <head>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
   <style>
     .fairworkframe {
       /*
@@ -156,7 +157,7 @@
 
       function setLastTime(duration) {
         var last = document.getElementById('lasttimelink');
-        last.innerHTML = "Last time: " + duration + " minute" + (duration == 1 ? "" : "s");
+        last.innerHTML = "Last HIT time: " + duration + " minute" + (duration == 1 ? "" : "s");
         last.onclick = function() {
           document.getElementById('fairwork-min').value = duration;
           reportTime();
@@ -164,9 +165,9 @@
         last.style.display = "block";
       }
 
-      function receiveMessage(message) {
+      function receiveMessage(event) {
         if ((event.origin === "https://workersandbox.mturkcontent.com" || event.origin === "https://mturkcontent.com") && event.data['status'] === "estimatedTime") {
-          updateEstimatedTime(message.data['value']);
+          updateEstimatedTime(event.data['value']);
         }
       }
 
@@ -291,12 +292,12 @@
     <div class='fairwork'>
       <p><strong>Get paid fairly:</strong> This requester is using the Fair Work script to bring pay rates up to the minimum wage specified in the <a href='http://guidelines.wearedynamo.org/'>Turker-authored We Are Dynamo guidelines</a>. Fair Work does this by measuring completion times and then auto-bonusing workers to meet the desired hourly wage if needed.</p>
 
-      <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Any needed bonuses are sent out daily.</p>
+      <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Bonuses are sent out daily.</p>
 
       <form>
         <div><input id='fairwork-min' name='fairwork-min' type='text' /> minutes (e.g., 1.5, 2, 60)</div>
-        <div><span id="estimatedtime"><a id="estimatedtimelink" href="#">Estimated time</a></span></div>
-        <div><span id="lasttime"><a id="lasttimelink" href="#" style="display: none;">Last time</a></span></div>
+        <div><span id="estimatedtime"><a id="estimatedtimelink" href="#">Estimated time: 0 minutes</a></span></div>
+        <div><span id="lasttime"><a id="lasttimelink" href="#" style="display: none;">Last HIT time</a></span></div>
       </form>
     </div>
   </div>
