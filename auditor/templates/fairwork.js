@@ -18,6 +18,7 @@
 
   // Add the timer script to the parent page, not to the Fair Work iframe
   function addTimerScript() {
+
     var newScript = document.createElement("script");
     newScript.onload = function() {
       // Register the timer for estimated time spent
