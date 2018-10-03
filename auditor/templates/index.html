@@ -1,8 +1,42 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <p>Edit one line of your code, and Fair Work will ensure that your workers are paid at least minimum wage.</p>
+  <p class="lead">Add one line of code, and Fair Work will ensure that your Mechanical Turk workers are paid at least minimum wage. To start, <a href="{% url 'keys' %}">get the code snippet for your Mechanical Turk account</a>.
 
-  <p>Please visit <a href="https://github.com/StanfordHCI/fairwork">our GitHub page</a> for details.</p>
+  <h5>How do I use it?</h5>
+  <p>
+    <ol>
+      <li><a href="{% url 'keys' %}">Register your API keys with the Fair Work server</a>.</li>
+      <li>Put the JavaScript link that the server gives you into the HTML of your HIT. The JavaScript will look something like:<br/><code>&#x3C;script src=&#x22;https://fairwork.herokuapp.com/fairwork.js?aws_account=12345&#x22;&#x3E;&#x3C;/script&#x3E;</code><br/>
+      The account number at the end identifies your HITs to the server.</li>
+    </ol>
+  </p>
+
+  <h5>How does it work?</h5>
+  <p>Fair Work adds a question to the bottom of your HIT asking the workers to self-report how long the task took them. Reports are then combined to estimate the effective rate for your tasks. Workers are auto-bonused to bring the payment up to a minimum wage of $11.00/hr, representing minimum wage in California. Roughly 75% of AMT workers are in the U.S., so paying a reasonable minimum wage &mdash; <i>over</i> federal minimum wage &mdash; is the right thing to do as researchers to demonstrate that we take the high road.</p>
+
+  <p>Behind the scenes, the system tracks HIT acceptances, then aggregates the reported times at regular intervals to audit effective HIT wages. If a HIT is found to be underpaid, the system automatically bonuses the worker to compensate.</p>
+
+  <p>If we identify any workers who break faith by consistently biasing their estimates or colluding, we will remove them from bonus eligibility.</p>
+
+  <h5>Can I use this without your server keeping encrypted copies of my AWS keys?</h5>
+  <p>Yes. <a href="http://www.github.com/StanfordHCI/fairwork">You can run a copy of the server yourself.</a> By doing so, you are committing that you will 1)&nbsp;Not lower the minimum wage in the code, and 2)&nbsp;Run the payment scripts on their required schedule so that workers are paid promptly. The code can run on a standalone server; however, it is also packaged to be immediately deployable to Heroku.</p>
+
+  <h5>Any other requirements?</h5>
+  <p>A belief that we should be paying workers fairly.</p>
+
+  <h5>But couldn't workers lie or be inaccurate?</h5>
+  <p>Yes. But you are using this tool because you want to help ensure fair treatment to workers, right? Fair treatment starts with trusting workers. They will make good faith estimates.</p>
+
+  <h5>But couldn't you design an incentive compatible mechanism so that collusion is a bad idea?</h5>
+  <p>Yes. But you are using this tool because you want to help ensure fair treatment to workers, right? Fair treatment starts with trusting workers. They will make good faith estimates.</p>
+
+  <h5>I have an even cleverer point suggesting that I might not be able to trust workers' self reports. Might my clever rebuttal be right?</h5>
+  <p>Yes. But you are using this tool because you want to help ensure fair treatment to workers, right? Fair treatment starts with trusting workers. They will make good faith estimates.</p>
+
+
+
+
+
 
 {% endblock %}
