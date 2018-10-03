@@ -18,8 +18,12 @@ ificate ../localhost.crt --key ../localhost.key
 ```
 
 ## Auditing HIT payment
+Collect completed HITs --- run this hourly:
 ```shell
 python manage.py pullnotifications --settings=fairwork_server.local_settings
+```
 
+Bonus any underpaid HITs to bring them up to minimum wage --- run this daily:
+```shell
 python manage.py auditpayments --settings=fairwork_server.local_settings
 ```
