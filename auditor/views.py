@@ -71,7 +71,8 @@ def create_hit(request):
         'status': 'success',
         'host': host,
         'hit_id': h.id,
-        'hit_type_id': ht.id
+        'hit_type_id': ht.id,
+        'worker_id': w.id
     })
 
 @csrf_exempt
@@ -79,6 +80,7 @@ def most_recent_report(request):
     hit_id = __get_POST_param(request, 'hit_id')
     hit_type_id = __get_POST_param(request, 'hit_type_id')
     host = __get_POST_param(request, 'host')
+    worker_id = __get_POST_param(request, 'worker_id')
 
     ht = HITType.objects.get(
         id = hit_type_id,
@@ -88,8 +90,11 @@ def most_recent_report(request):
         id = hit_id,
         hit_type = ht
     )
+    w = Worker.objects.get(
+        id = worker_id
+    )
 
-    most_recent_report = AssignmentDuration.objects.filter(assignment__hit__hit_type = ht).order_by('-timestamp').first()
+    most_recent_report = AssignmentDuration.objects.filter(assignment__hit__hit_type = ht).filter(assignment__worker = w).order_by('-timestamp').first()
     if most_recent_report is None:
         return JsonResponse( {
             'assignment': None,
