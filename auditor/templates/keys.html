@@ -7,7 +7,7 @@
 
   <p>After you enter your credentials below, we will return the JavaScript code you can include in your HIT to enable Fair Work.</p>
 
-  <form action="{% url 'keys' %}" method="post">
+  <form action="{% url 'keys' %}" method="post" autocomplete="off">
     {% csrf_token %}
     <table>
       {{ form.as_table }}
