@@ -11,7 +11,7 @@ from fairwork_server.settings import *
 python manage.py runserver --settings=fairwork_server.local_settings
 ```
 
-Or using local SSH:
+Or using local SSH, assuming that you've already generated a .crt and .key file (here, localhost.crt and localhost.key):
 ```shell
 python manage.py runsslserver --settings=fairwork_server.local_settings --cert
 ificate ../localhost.crt --key ../localhost.key
