@@ -157,7 +157,8 @@ def iframe(request):
         'DURATION_URL': request.build_absolute_uri('duration'),
         'HOME_URL': request.build_absolute_uri('/'),
         'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
-        'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent')
+        'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
+        'FAIRWORK_DOMAIN': request.build_absolute_uri('/')        
     }
     return render(request, 'fairwork.html', context)
 
