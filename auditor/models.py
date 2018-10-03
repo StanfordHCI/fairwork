@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 
 import fernet_fields
+from decimal import Decimal
 
 class Requester(models.Model):
     # EncryptedCharField cannot serve as a primary key or lookup field
@@ -107,6 +108,8 @@ class AssignmentAudit(models.Model):
     def get_underpayment(self):
         if self.estimated_time is None or self.estimated_rate is None:
             return None
+        if not self.is_underpaid():
+            return Decimal('0.00') # no bonus necessary
 
         underpayment_ratio = settings.MINIMUM_WAGE_PER_HOUR / self.estimated_rate
         paid_already = self.assignment.hit.hit_type.payment
