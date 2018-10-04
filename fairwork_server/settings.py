@@ -139,6 +139,7 @@ EMAIL_HOST_USER = 'sendgrid_username'
 EMAIL_HOST_PASSWORD = 'sendgrid_password'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_SUBJECT_PREFIX = "[Fair Work] "
 
 
 # Static files (CSS, JavaScript, Images)
@@ -163,3 +164,5 @@ AWS_ACCESS_KEY_ID = ''
 AWS_SECRET_ACCESS_KEY = ''
 MTURK_SANDBOX_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
 MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
+
+ADMINS = [("Your Admin Name", "Your Admin Email"), ]

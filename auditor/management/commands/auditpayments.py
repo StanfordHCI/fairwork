@@ -177,7 +177,7 @@ class Command(BaseCommand):
         self.stdout.write(plain_message)
 
         subject = "Fair Work: Mechanical Turk bonuses sent for $%.2f" % self.__get_underpayment(requester_audit)
-        send_mail(subject, plain_message, 'fairwork@cs.stanford.edu', [email], fail_silently=False, html_message=html_message)
+        send_mail(subject, plain_message, admin_email_address(), [email], fail_silently=False, html_message=html_message)
 
         for audit in requester_audit:
             audit.message_sent = True
@@ -272,5 +272,9 @@ We will try to send the bonus again periodically, so you will get paid after the
 We are sending you this note because you are using the Fair Work script to ensure Mechanical Turk pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid.
         """ % (total_underpaid, total_deposit, settings.MINIMUM_WAGE_PER_HOUR)
 
-        send_mail(subject, message, 'fairwork@cs.stanford.edu', [requester.email], fail_silently=False)
+        send_mail(subject, message, admin_email_address(), [requester.email], fail_silently=False)
         self.stdout.write(message)
+
+
+def admin_email_address():
+    return "%s <%s>" % (settings.ADMINS[0][0], settings.ADMINS[0][1])
