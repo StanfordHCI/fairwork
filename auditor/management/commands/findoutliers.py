@@ -52,8 +52,11 @@ class Command(BaseCommand):
             for hidx, hittype in enumerate(hittypes):
                 durations = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hittype)
                 for duration in durations:
-                    #median_report = np.median([d.duration.total_seconds() for d in durations])
-                    dfpy.append({ 'worker': worker.id, 'hit_type': hittype.id, 'log_report': math.log(duration.duration.total_seconds())})
+                    report = duration.duration.total_seconds()
+                    if report == 0:
+                        report = 1 # avoid log(0)
+                    log_report = math.log(report)
+                    dfpy.append({ 'worker': worker.id, 'hit_type': hittype.id, 'log_report': log_report})
         df = pd.DataFrame(dfpy)
         return df
 
