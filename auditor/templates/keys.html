@@ -11,15 +11,7 @@
 
   <p>To use Fair Work, we need to know your Amazon AWS credentials. If you don't know what these are, or need to create them, <a href="https://blog.mturk.com/tutorial-setting-up-your-aws-account-to-make-use-of-mturks-api-4e405b8fc8cb">follow Mechanical Turk's tutorial</a>. This information is encrypted in our database. After you enter your credentials below, we will return the JavaScript code you can include in your HIT to enable Fair Work.</p>
 
-  <form action="{% url 'keys' %}" method="post" autocomplete="off">
-    {% csrf_token %}
-    <table>
-      {{ form.as_table }}
-    </table>
-    <input type="submit" value="Get Fair Work script" />
-  </form>
-
-  <p style="margin-top: 1em;">Fair Work is a research project at Stanford University. By entering your information here, you acknowledge and consent to our IRB procedures. TL;DR: we will respect your privacy, we may analyze aggregate data for research. <a href="javascript:showIRB()">Read the full form here</a>.</p>
+  <p style="margin-top: 1em;">Fair Work is a research project at Stanford University. By entering your information here, you acknowledge and consent to our IRB procedures. In brief: we will respect your privacy, and we may analyze aggregate data for research. <a href="javascript:showIRB()">Read the full form here</a>.</p>
 
   <div id="irb" style="display: none;">
     <p>Fair Work is a research project run by the <a href="http://hci.stanford.edu/" target="_blank" style="color: rgb(81, 167, 249);">Stanford HCI Group</a>.</p>
@@ -38,6 +30,14 @@
 
     <p>You may print or save a copy of this page for your records.</p>
   </div>
+
+  <form action="{% url 'keys' %}" method="post" autocomplete="off" class="signup">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+    </table>
+    <input type="submit" value="Get Fair Work script" />
+  </form>
 
 
 {% endblock %}
