@@ -10,14 +10,12 @@ CSRF_COOKIE_SECURE = True
 
 ADMINS = [(os.environ['ADMIN_NAME'], os.environ['ADMIN_EMAIL']), ]
 
-ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost', 'fairwork.herokuapp.com']
+ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost', 'fairwork.herokuapp.com', 'fairwork.stanford.edu']
 
 TIME_ZONE = 'America/Los_Angeles'
 
 DATABASES['default'] =  dj_database_url.config()
 
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 SECRET_KEY = os.environ['SECRET_KEY']
 
 EMAIL_HOST = 'smtp.sendgrid.net'
