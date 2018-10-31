@@ -25,7 +25,7 @@ EMAIL_USE_TLS = True
 python manage.py runserver --settings=fairwork_server.local_settings
 ```
 
-Or using local SSH, assuming that you've already generated a .crt and .key file (here, localhost.crt and localhost.key):
+Or using localhost HTTPS, assuming that you've already generated a self-signed .crt and .key file (here, localhost.crt and localhost.key):
 ```shell
 python manage.py runsslserver --settings=fairwork_server.local_settings --certificate ../localhost.crt --key ../localhost.key
 ```
