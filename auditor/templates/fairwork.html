@@ -267,8 +267,12 @@
         }
         http.send(params);
 
-        // Set up IRB expander
-        document.getElementById('show-irb').onclick = function() {
+        var irb = "{{ IRB_AGREEMENT }}";
+
+        if ( irb === "True" ) {
+          document.getElementById('irb').style.display = 'none';
+        }
+        else {
           document.getElementById('irb').style.display = 'block';
         }
 
@@ -291,7 +295,7 @@
     <div class='fairwork'>
       <p><strong>Get paid fairly:</strong> This requester is using the <a href="{{ FAIRWORK_DOMAIN }}" target="_blank">Fair Work script</a> to bring pay rates up to the minimum wage specified in the <a href='http://guidelines.wearedynamo.org/'>Turker-authored We Are Dynamo guidelines</a>. Fair Work does this by measuring completion times and then auto-bonusing workers to meet the desired hourly wage if needed.</p>
 
-      <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Bonuses are sent out daily. By participating, you consent to participation in Fair Work, a research project at Stanford University <a id="show-irb" href="#">[read the IRB]</a>.</p>
+      <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Bonuses are sent out daily. By participating, you consent to participation in Fair Work, a research project at Stanford University</p>
 
       <form>
         <div><input id='fairwork-min' name='fairwork-min' type='text' /> minutes (e.g., 1.5, 2, 60)</div>
@@ -300,7 +304,7 @@
       </form>
     </div>
 
-    <div id="irb" style="display: none;">
+    <div id="irb">
       <p>Fair Work is a research project run by the <a href="http://hci.stanford.edu/" target="_blank">Stanford HCI Group</a>.</p>
 
       <p><b>Description</b>: Fair Work is a research system focused on fair pay for online workers. You can participate by completing this HIT and filling out the time self-report above. Worker reponses will be aggregated and the system will automatically bonus workers to ensure that they earned minimum wage. It will log items such as worker time self-reports. Data will not be shared with anyone outside our research team. You can choose not to participate by not filling out the form. The system will still log that you completed the task so that you can receive a bonus. However, if no workers fill out the form, no bonuses will be sent because the system cannot estimate work time for the task.</p>
