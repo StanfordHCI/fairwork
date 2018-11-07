@@ -10,7 +10,7 @@ SECRET_KEY = 'createarandomstringandputithere'
 ADMINS = [("Fair Work (Debug)", "youremailaddress@domain.com"), ]
 TIME_ZONE = 'America/Los_Angeles' # or your timezone
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = []
 
 EMAIL_HOST = '' # email server so you can send notifications from the platform, e.g., SendGrid
 EMAIL_HOST_USER = '' # username
