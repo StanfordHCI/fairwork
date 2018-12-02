@@ -127,11 +127,25 @@ def assignment_duration(request):
         }
     )
 
-    worker.irb_agreement = True
-    worker.save()
-
     return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
 
+@csrf_exempt
+def irb_agreement(request):
+    worker_id = __get_POST_param(request, 'worker_id')
+    agreement = __get_POST_param(request, 'agreement')
+
+    worker, worker_created = Worker.objects.get_or_create(
+        id = worker_id
+    )
+
+    if agreement == 'true':
+        worker.irb_agreement = True
+        worker.save()
+    else:
+        worker.irb_agreement = False
+        worker.save()
+
+    return HttpResponse("IRB agreement value toggled to %s" % agreement)
 
 @csrf_exempt
 def requester(request):
@@ -163,6 +177,7 @@ def iframe(request):
 
     context = {
         'DURATION_URL': request.build_absolute_uri('duration'),
+        'IRB_URL': request.build_absolute_uri('toggleirb'),
         'HOME_URL': request.build_absolute_uri('/'),
         'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
         'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
@@ -187,7 +202,6 @@ def keys(request):
 
 def update_keys(key, secret, email, aws_account):
     __create_or_update_requester(aws_account, key, secret, email)
-    print('updated')
 
 def script(request):
     aws_account = request.GET.get('aws_account')
