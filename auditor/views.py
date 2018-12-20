@@ -110,6 +110,7 @@ def most_recent_report(request):
 @csrf_exempt
 def assignment_duration(request):
     hit, hit_type, worker, assignment = __get_assignment_info(request)
+
     if 'aws_account' in request.POST: # this is coming from JS, where we won't have called create_hit
         aws_account = __get_POST_param(request, 'aws_account')
         r = Requester.objects.get(aws_account = aws_account)
@@ -125,8 +126,26 @@ def assignment_duration(request):
             'duration': duration
         }
     )
+
     return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
 
+@csrf_exempt
+def irb_agreement(request):
+    worker_id = __get_POST_param(request, 'worker_id')
+    agreement = __get_POST_param(request, 'agreement')
+
+    worker, worker_created = Worker.objects.get_or_create(
+        id = worker_id
+    )
+
+    if agreement == 'true':
+        worker.irb_agreement = True
+        worker.save()
+    else:
+        worker.irb_agreement = False
+        worker.save()
+
+    return HttpResponse("IRB agreement value toggled to %s" % agreement)
 
 @csrf_exempt
 def requester(request):
@@ -153,13 +172,19 @@ def load_js(request):
 @csrf_exempt
 @xframe_options_exempt
 def iframe(request):
+    worker_id = request.GET.get('workerId')
+    w = Worker.objects.get(id = worker_id)
+
     context = {
         'DURATION_URL': request.build_absolute_uri('duration'),
+        'IRB_URL': request.build_absolute_uri('toggleirb'),
         'HOME_URL': request.build_absolute_uri('/'),
         'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
         'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
-        'FAIRWORK_DOMAIN': request.build_absolute_uri('/')        
+        'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
+        'IRB_AGREEMENT': w.irb_agreement
     }
+
     return render(request, 'fairwork.html', context)
 
 def keys(request):
@@ -177,7 +202,6 @@ def keys(request):
 
 def update_keys(key, secret, email, aws_account):
     __create_or_update_requester(aws_account, key, secret, email)
-    print('updated')
 
 def script(request):
     aws_account = request.GET.get('aws_account')
