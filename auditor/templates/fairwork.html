@@ -218,6 +218,10 @@
         irbAgreement();
       }
 
+      function showIRBConsent() {
+        document.getElementById('irb').style.display = 'block';
+      }
+
 
       // Equivalent of $(document).ready
       document.addEventListener("DOMContentLoaded", function(event) {
@@ -309,9 +313,11 @@
 
         if ( irb === "True" ) {
           document.getElementById('irb').style.display = 'none';
+          document.getElementById('consent').style.display = 'none';
           document.getElementById('time-form').style.display = 'block';
         } else {
           document.getElementById('irb').style.display = 'block';
+          document.getElementById('consent').style.display = 'block';
           document.getElementById('time-form').style.display = 'none';
         }
 
@@ -322,6 +328,8 @@
         document.getElementById("fairwork-min").addEventListener("keyup", debounce(reportTime, 250));
 
         document.getElementById("irb-agreed").addEventListener("change", toggleTimeForm);
+
+        document.getElementById("show-IRB").addEventListener("click", showIRBConsent);
       });
 
     })();
@@ -337,7 +345,7 @@
     <div class='fairwork'>
       <p><strong>Get paid fairly:</strong> This requester is using the <a href="{{ FAIRWORK_DOMAIN }}" target="_blank">Fair Work script</a> to bring pay rates up to the minimum wage specified in the <a href='http://guidelines.wearedynamo.org/'>Turker-authored We Are Dynamo guidelines</a>. Fair Work does this by measuring completion times and then auto-bonusing workers to meet the desired hourly wage if needed.</p>
 
-      <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Bonuses are sent out daily. By participating, you acknowledge and consent to our IRB procedures below</p>
+      <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Bonuses are sent out daily. By participating, you acknowledge and consent to the <a id="show-IRB" href="#">Fair Work IRB</a>.</p>
 
       <div id="irb">
         <div style="padding-left: 2em; border-left: 5px solid #eee;">
@@ -357,13 +365,13 @@
 
           <p>You may print or save a copy of this page for your records.</p>
         </div>
+      </div>
 
-        <div>
-          <label>
-            <b>I agree to the Stanford IRB Agreement:</b>
-          </label>
-          <input type="checkbox" name="irb-agreement" id="irb-agreed">
-        </div>
+      <div id="consent">
+        <label>
+          <b>I agree to the Stanford IRB:</b>
+        </label>
+        <input type="checkbox" name="irb-agreement" id="irb-agreed">
       </div>
 
       <form id='time-form'>
