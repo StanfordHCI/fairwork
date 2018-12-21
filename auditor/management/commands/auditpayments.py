@@ -27,8 +27,6 @@ Performs the payment audit on the task. Pseudocode:
 - Bonus worker on first assignment in the HITGroup (to avoid being spammy) and keep a record
 """
 
-REQUESTER_GRACE_PERIOD = timedelta(hours = 12)
-
 class Command(BaseCommand):
     help = 'Calculate effective rate for tasks and audit any underpayment'
 
@@ -85,8 +83,6 @@ class Command(BaseCommand):
 
     def __notify_requesters(self):
         audits = AssignmentAudit.objects.filter(message_sent = None)
-        print("Audits?")
-        print(audits)
         requesters = Requester.objects.filter(hittype__hit__assignment__assignmentaudit__in = audits).distinct()
         for requester in requesters:
             requester_audit = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
@@ -109,6 +105,7 @@ class Command(BaseCommand):
 
 
 # Expose these methods publicly
+REQUESTER_GRACE_PERIOD = timedelta(hours = 12)
 
 def audit_list_message(assignments_to_bonus, is_worker, is_html):
     total_unpaid = get_underpayment(assignments_to_bonus)
@@ -126,9 +123,10 @@ def audit_list_message(assignments_to_bonus, is_worker, is_html):
     if not is_worker:
         message += "<p>" if is_html else ""
         message += "Bonuses will be sent in %d hours: %s. You can review the pending bonuses below and freeze bonuses if something looks unusual. Please remember to trust the workers' estimates, and only freeze bonuses if absolutely needed." % (REQUESTER_GRACE_PERIOD.total_seconds() / (60*60), timezone.localtime(timezone.now() + REQUESTER_GRACE_PERIOD).strftime("%B %d at %-I:%M%p %Z"))
+        message += "</p>" if is_html else "\n\n"
 
     message += "<p>" if is_html else ""
-    message += "The total amount paid is $%.2f. The tasks being reimbursed:" % total_unpaid
+    message += "The total bonus amount is $%.2f. The tasks being bonused:" % total_unpaid
     message += "</p><ul>" if is_html else "\n\n"
 
     hit_types = HITType.objects.filter(hit__assignment__assignmentaudit__in = assignments_to_bonus).distinct()
