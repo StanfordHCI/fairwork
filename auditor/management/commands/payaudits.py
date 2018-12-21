@@ -11,15 +11,14 @@ import boto3
 
 from auditor.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester
 from auditor.management.commands.pullnotifications import get_mturk_connection
+from auditor.management.commands import auditpayments
 
 """
 Pays bonuses for audited HITs that underpaid.
 """
 
-REQUESTER_GRACE_PERIOD = timedelta(hours = 12)
-
 class Command(BaseCommand):
-    help = 'Calculate effective rate for tasks and bonus any underpayment'
+    help = 'Bonus underpayment for audited tasks'
 
     mturk = dict() # maintains the Boto client connections
 
@@ -45,28 +44,27 @@ class Command(BaseCommand):
 
                 requester_to_bonus = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
 
-                #self.__notify_requester(requester, requester_to_bonus)
-
                 workers = Worker.objects.filter(assignment__assignmentaudit__in = requester_to_bonus).distinct()
                 for worker in workers:
                     assignments_to_bonus = requester_to_bonus.filter(assignment__worker = worker).distinct()
                     self.__bonus_worker(worker, assignments_to_bonus, requester, is_sandbox)
 
                 # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
-                still_unpaid = assignments_to_bonus.filter(status = AssignmentAudit.UNPAID)
+                still_unpaid = requester_to_bonus.filter(status = AssignmentAudit.UNPAID)
                 still_unpaid = still_unpaid.all() # refreshes the queryset from the DB, since we just changed payment status of a bunch of items
-                self.__notify_insufficient_funds_requester(requester, still_unpaid)
+                if len(still_unpaid) > 0:
+                    self.__notify_insufficient_funds_requester(requester, still_unpaid)
 
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
         # How much do we owe them?
         self.stdout.write(self.style.WARNING('Worker: %s' % worker.id))
-        total_unpaid = self.__get_underpayment(assignments_to_bonus)
+        total_unpaid = auditpayments.get_underpayment(assignments_to_bonus)
 
         self.stdout.write(self.style.WARNING('Total bonus for %s: $%.2f\n---------' % (worker.id, total_unpaid)))
 
         # Send the bonus
         # Construct the message to the worker
-        message = self.__audit_list_message(assignments_to_bonus, True, False)
+        message = auditpayments.audit_list_message(assignments_to_bonus, True, False)
         # Bonus worker on first assignment in the HITGroup (to avoid being spammy) and keep a record
         assignment_to_bonus = assignments_to_bonus[0] # Arbitrarily attach it to the first one
         token = '%s: %.2f' % (assignment_to_bonus.assignment.id, total_unpaid) # sending the same token prevents AMT from sending the same bonus twice
@@ -86,9 +84,10 @@ class Command(BaseCommand):
                 unpaid_task.save()
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
-                self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying."))
+                self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
                 self.__notify_insufficient_funds_worker(requester, is_sandbox, worker, total_unpaid, assignment_to_bonus)
             elif e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
+                self.stderr.write(self.style.ERROR("Identical bonus has already been paid on this task. Skipping."))
                 # They already paid it, mark it as done
                 for unpaid_task in assignments_to_bonus:
                     unpaid_task.status = AssignmentAudit.PAID
@@ -124,7 +123,7 @@ We will try to send the bonus again periodically, so you will get paid after the
             self.stderr.write(self.style.ERROR(e))
 
     def __notify_insufficient_funds_requester(self, requester, unpaid_assignments):
-        total_underpaid = self.__get_underpayment(unpaid_assignments)
+        total_underpaid = auditpayments.get_underpayment(unpaid_assignments)
         total_deposit = total_underpaid * Decimal('1.20') # AMT bonus fee rate
         subject = "Error: Fair Work bonuses are pending but you are out of funds. Please deposit $%.2f." % total_deposit
         message = """This is an automated message from the Fair Work script: you have underpaid workers and need to bonus them, but you don't have enough funds in your account to send the bonus. You need to send bonuses totaling $%.2f, but with Mechanical Turk's fee, you need to deposit $%.2f to have enough funds to send those bonuses. Please deposit more funds, and we will automatically retry in roughly 24 hours.
@@ -132,9 +131,5 @@ We will try to send the bonus again periodically, so you will get paid after the
 We are sending you this note because you are using the Fair Work script to ensure Mechanical Turk pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid.
         """ % (total_underpaid, total_deposit, settings.MINIMUM_WAGE_PER_HOUR)
 
-        send_mail(subject, message, admin_email_address(), [requester.email], fail_silently=False)
+        send_mail(subject, message, auditpayments.admin_email_address(), [requester.email], fail_silently=False)
         self.stdout.write(message)
-
-
-def admin_email_address():
-    return "%s <%s>" % (settings.ADMINS[0][0], settings.ADMINS[0][1])
