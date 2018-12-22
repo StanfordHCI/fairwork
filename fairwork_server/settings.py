@@ -83,6 +83,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'fairwork_server.context_processor.fairwork_context_processor',
             ],
         },
     },
@@ -157,10 +158,16 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
 
-# App-specific settings
-MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
-
 MTURK_SANDBOX_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
 MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 
-ADMINS = [("Your Admin Name", "Your Admin Email"), ]
+# App-specific settings
+MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
+
+WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html'
+REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html'
+
+ADMIN_NAME = "Your Admin Name"
+ADMIN_EMAIL = "Your Admin Email"
+
+ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]

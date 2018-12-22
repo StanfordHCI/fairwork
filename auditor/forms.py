@@ -7,7 +7,7 @@ class RequesterForm(forms.Form):
     key = forms.CharField(label='AWS Access Key ID', widget=forms.TextInput(attrs={'placeholder': 'AKIAIOSFODNN7EXAMPLE', 'size': 45}), max_length=100)
     secret = forms.CharField(label='AWS Secret Access Key', widget=forms.TextInput(attrs={'placeholder': 'wJalrXUtnFEMIYEXAMPLEKEY', 'size': 45}), max_length=100)
     email = forms.EmailField(label='Email address', widget=forms.EmailInput(attrs={'placeholder': 'williampayfair@gmail.com', 'size': 45}))
-    irb_agree = forms.BooleanField(label='I agree to the Stanford IRB')
+    irb_agree = forms.BooleanField(label='I agree to the IRB')
 
     @cached_property
     def aws_account(self):
