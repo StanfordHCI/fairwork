@@ -348,28 +348,12 @@
       <p>Please report how much active work time this task took you, rounded to the nearest half minute. If you are far off from the median time report across all workers for this task, indicating a lack of good-faith estimation, you may be removed from Fair Work bonus eligibility. Bonuses are sent out daily. By participating, you acknowledge and consent to the <a id="show-IRB" href="#">Fair Work IRB</a>.</p>
 
       <div id="irb">
-        <div style="padding-left: 2em; border-left: 5px solid #eee;">
-          <p>Fair Work is a research project run by the <a href="http://hci.stanford.edu/" target="_blank">Stanford HCI Group</a>.</p>
-
-          <p><b>Description</b>: Fair Work is a research system focused on fair pay for online workers. You can participate by completing this HIT and filling out the time self-report above. Worker reponses will be aggregated and the system will automatically bonus workers to ensure that they earned minimum wage. It will log items such as worker time self-reports. Data will not be shared with anyone outside our research team. You can choose not to participate by not filling out the form. The system will still log that you completed the task so that you can receive a bonus. However, if no workers fill out the form, no bonuses will be sent because the system cannot estimate work time for the task.</p>
-
-          <p><b>Time Involvement</b>: You can participate for as long as you want by filling out the form above on any HITs you encounter with it installed.</p>
-
-          <p><b>Risks and Benefits</b>: Fair Work will supply bonuses based on aggregate worker reports. Beyond this, we cannot and do not guarantee or promise that you will receive any benefits from using Fair Work.</p>
-
-          <p><b>Subject's Rights</b>: If you have read this form and have decided to participate in this project, please understand your participation is voluntary and you have the right to withdraw your consent or discontinue participation at any time without penalty or loss of benefits to which you are otherwise entitled. The alternative is not to participate by filling out the form, or not completing this HIT. Your individual privacy will be maintained in all published and written data resulting from the study.</p>
-
-          <p><b>Contact Information</b>: If you have any questions, concerns or complaints about this research, its procedures, risks and benefits, contact the Fair Work team at <a href="mailto:fairwork@cs.stanford.edu">fairwork@cs.stanford.edu</a>.</p>
-
-          <p><b>Independent Contact</b>: If you are not satisfied with how this study is being conducted, or if you have any concerns, complaints, or general questions about the research or your rights as a participant, please contact the Stanford Institutional Review Board (IRB) to speak to someone independent of the research team at (650)-723-2480 or toll free at 1-866-680-2906. You can also write to the Stanford IRB, Stanford University, 3000 El Camino Real, Five Palo Alto Square, 4th Floor, Palo Alto, CA 94306.</p>
-
-          <p>You may print or save a copy of this page for your records.</p>
-        </div>
+        {% include WORKER_IRB %}
       </div>
 
       <div id="consent">
         <label>
-          <b>I agree to the Stanford IRB:</b>
+          <b>I agree to the IRB:</b>
         </label>
         <input type="checkbox" name="irb-agreement" id="irb-agreed">
       </div>

@@ -105,7 +105,7 @@ class Command(BaseCommand):
 
 
 # Expose these methods publicly
-REQUESTER_GRACE_PERIOD = timedelta(hours = 12)
+REQUESTER_GRACE_PERIOD = timedelta(hours = 0) if settings.DEBUG else timedelta(hours = 12)
 
 def audit_list_message(assignments_to_bonus, is_worker, is_html):
     total_unpaid = get_underpayment(assignments_to_bonus)
