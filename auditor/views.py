@@ -182,7 +182,8 @@ def iframe(request):
         'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
         'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
         'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
-        'IRB_AGREEMENT': w.irb_agreement
+        'IRB_AGREEMENT': w.irb_agreement,
+        'WORKER_IRB': settings.WORKER_IRB_TEMPLATE
     }
 
     return render(request, 'fairwork.html', context)
@@ -197,8 +198,12 @@ def keys(request):
             return HttpResponseRedirect('/script?aws_account=' + form.aws_account)
     else:
         form = RequesterForm()
+    context = {
+        'form': form,
+        'REQUESTER_IRB': settings.REQUESTER_IRB_TEMPLATE
+    }
 
-    return render(request, 'keys.html', {'form': form})
+    return render(request, 'keys.html', context)
 
 def update_keys(key, secret, email, aws_account):
     __create_or_update_requester(aws_account, key, secret, email)
