@@ -147,7 +147,7 @@ def audit_list_message(assignments_to_bonus, is_worker, is_html):
 
             summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across workers was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignments to bring the payment to a suggested ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), paymentrevised = paymentrevised, totalbonus = get_underpayment(hittype_assignments))
             if not is_worker:
-                summary += " [FREEZE LINK]"
+                summary += " [Freeze this?: email {{ fairwork_email }} ]"
         s += summary
         s += "<ul>" if is_html else "\n"
 
