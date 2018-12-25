@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from auditor.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester
 
 """
-Uses singular value decomposition to create a vector factorization of the task-worker matrix.
+Uses regression to understand the effect of each worker.
 This can be tested to identify if a worker is way out of the normal self-report bounds,
 as when their item in the worker vector is very unusually scaled.
 """
