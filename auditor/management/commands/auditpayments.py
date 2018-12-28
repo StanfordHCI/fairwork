@@ -147,7 +147,10 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
         message += "This requester is "
     else:
         message += "You are "
-    message += "using the Fair Work script to ensure pay rates reach a minimum wage of $%.2f/hr. The goal of fair pay is outlined in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage of $%.2f/hr." % (settings.MINIMUM_WAGE_PER_HOUR, settings.MINIMUM_WAGE_PER_HOUR)
+    message += "using the <a href='%s'>Fair Work script</a> " % settings.HOSTNAME if is_html else "using the Fair Work script (%s) " % settings.HOSTNAME
+    message += "to ensure pay rates reach a minimum wage of $%.2f/hr. The goal of fair pay is outlined in the Turker-authored " % (settings.MINIMUM_WAGE_PER_HOUR)
+    message += "<a href='http://guidelines.wearedynamo.org/'>We Are Dynamo guidelines</a>. " if is_html else "We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. "
+    message += "Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage of $%.2f/hr." % (settings.MINIMUM_WAGE_PER_HOUR)
     message += "</p>" if is_html else "\n\n"
 
     if not is_worker:
