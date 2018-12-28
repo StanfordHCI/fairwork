@@ -13,4 +13,5 @@ urlpatterns = [
     path('iframe', views.iframe, name='iframe'),
     path('keys', views.keys, name='keys'),
     path('script', views.script, name='script'),
+    path('freeze/<str:requester>/<str:worker_signed>', views.freeze, name='freeze'),
 ]
