@@ -4,6 +4,9 @@ from django.db.models import Avg, Sum, F
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.template.defaultfilters import pluralize
+from django.core.signing import Signer
+from django.urls import reverse
+
 
 from statistics import median
 import decimal
@@ -107,8 +110,8 @@ class Command(BaseCommand):
     def __notify_requester(self, requester, requester_audit, is_sandbox):
         email = requester.email
         self.stdout.write(email)
-        plain_message = audit_list_message(requester_audit, False, False, is_sandbox)
-        html_message = audit_list_message(requester_audit, False, True, is_sandbox)
+        plain_message = audit_list_message(requester_audit, requester, False, False, is_sandbox)
+        html_message = audit_list_message(requester_audit, requester, False, True, is_sandbox)
         self.stdout.write(plain_message)
 
         if is_sandbox:
@@ -127,8 +130,10 @@ class Command(BaseCommand):
 # Expose these methods publicly
 REQUESTER_GRACE_PERIOD = timedelta(hours = 0) if settings.DEBUG else timedelta(hours = 12)
 
-def audit_list_message(assignments_to_bonus, is_worker, is_html, is_sandbox):
+def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_sandbox):
     total_unpaid = get_underpayment(assignments_to_bonus)
+    signer = Signer(salt=get_salt())
+
     message = ""
 
     if is_sandbox:
@@ -174,8 +179,6 @@ def audit_list_message(assignments_to_bonus, is_worker, is_html, is_sandbox):
             paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
 
             summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignment{assignment_plural:s} in {num_hits:d} HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), assignment_plural=pluralize(len(hittype_assignments)), num_hits=len(hits), hits_plural=pluralize(len(hits)), num_workers=len(workers), workers_plural=pluralize(len(workers)), paymentrevised = paymentrevised, totalbonus = get_underpayment(hittype_assignments))
-            if not is_worker:
-                summary += " [Freeze this?: email %s]" % (settings.ADMIN_EMAIL)
         s += summary
         s += "<ul>" if is_html else "\n"
 
@@ -187,7 +190,15 @@ def audit_list_message(assignments_to_bonus, is_worker, is_html, is_sandbox):
             median_nomicroseconds = str(median_duration).split(".")[0]
             s += "<li>" if is_html else "\t"
             s += "Worker %s: " % worker.id
-            s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
+            s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
+            if not is_worker:
+                worker_signed = signer.sign(worker.id)
+                freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
+
+                if is_html:
+                    s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
+                else:
+                    s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
             s += "</li>" if is_html else "\n"
 
         s += "</li>" if is_html else "\n\n"
@@ -206,3 +217,6 @@ def get_underpayment(assignments_to_bonus):
 
 def admin_email_address():
     return "%s <%s>" % (settings.ADMINS[0][0], settings.ADMINS[0][1])
+
+def get_salt():
+    return 'WORKER FREEZE'
