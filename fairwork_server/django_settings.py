@@ -12,6 +12,8 @@ ADMIN_NAME = os.environ['ADMIN_NAME']
 ADMIN_EMAIL = os.environ['ADMIN_EMAIL']
 ADMINS = [(os.environ['ADMIN_NAME'], os.environ['ADMIN_EMAIL']), ]
 
+HOSTNAME = os.environ['HOSTNAME']
+
 WORKER_IRB_TEMPLATE = os.environ['WORKER_IRB_TEMPLATE']
 REQUESTER_IRB_TEMPLATE = os.environ['REQUESTER_IRB_TEMPLATE']
 

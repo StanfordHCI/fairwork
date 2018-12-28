@@ -169,5 +169,6 @@ REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html'
 
 ADMIN_NAME = "Your Admin Name"
 ADMIN_EMAIL = "Your Admin Email"
-
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
+
+HOSTNAME = 'https://fairwork.yourdomain.com'

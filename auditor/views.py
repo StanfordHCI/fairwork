@@ -3,9 +3,8 @@ from django.http import HttpResponse, Http404, HttpResponseBadRequest, HttpRespo
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.conf import settings
-
+from django.core.signing import Signer
 from django.template import loader
-from django.shortcuts import render
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
 
@@ -13,6 +12,7 @@ from django.urls import reverse
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Requester
 from .forms import RequesterForm
 from auditor.management.commands.pullnotifications import get_mturk_connection
+from auditor.management.commands.auditpayments import get_salt
 
 from datetime import timedelta
 import boto3
@@ -213,6 +213,14 @@ def script(request):
     context = { 'JS_URL': request.build_absolute_uri(reverse('load_js') + '?aws_account=%s' % aws_account) }
 
     return render(request, 'script.html', context)
+
+def freeze(request, requester, worker_signed):
+    signer = Signer(salt=get_salt())
+    requester = Requester.objects.get(aws_account = requester)
+    worker_id = signer.unsign(worker_signed)
+    worker = Worker.objects.get(id = worker_id)
+
+    return render(request, 'freeze.html', context = { 'requester': requester, 'worker': worker })
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')
