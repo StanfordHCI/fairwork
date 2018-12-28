@@ -160,14 +160,14 @@ STATICFILES_DIRS = (
 
 MTURK_SANDBOX_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
 MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
+MINIMUM_WAGE_PER_HOUR = Decimal(11.00) # CA minimum wage 2018
 
-# App-specific settings
-MINIMUM_WAGE_PER_HOUR = Decimal(11.00)
-
+# Change these settings in your local settings file
 WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html'
 REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html'
 
 ADMIN_NAME = "Your Admin Name"
 ADMIN_EMAIL = "Your Admin Email"
-
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
+
+HOSTNAME = 'https://fairwork.yourdomain.com'

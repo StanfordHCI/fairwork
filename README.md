@@ -24,6 +24,8 @@ ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
 WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html' # for your IRB agreement
 REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html' # for your IRB agreement
 
+HOSTNAME = 'https://fairwork.yourdomain.com' # used as the hostname in emails sent by the system, since Django management commands do not know the server's hostname
+
 ```
 
 ## Starting the server
@@ -42,7 +44,12 @@ Collect completed HITs --- run this hourly:
 python manage.py pullnotifications --settings=fairwork_server.local_settings
 ```
 
-Bonus any underpaid HITs to bring them up to minimum wage --- run this daily:
+Check for underpayments and send requesters a notification of pending payments --- run this daily:
 ```shell
 python manage.py auditpayments --settings=fairwork_server.local_settings
+```
+
+Send the payments to workers after requesters have had time to read the email --- run this daily, 12hr after the auditpayments command:
+```shell
+python manage.py payaudits --settings=fairwork_server.local_settings
 ```
