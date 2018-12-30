@@ -39,6 +39,12 @@ class Worker(models.Model):
     def __str__(self):
         return self.id
 
+class RequesterFreeze(models.Model):
+    worker = models.ForeignKey(Worker, on_delete=models.CASCADE)
+    requester = models.ForeignKey(Requester, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now=True)
+    reason = models.TextField()
+
 class Assignment(models.Model):
     id = models.CharField(max_length=200, primary_key=True)
     hit = models.ForeignKey(HIT, on_delete=models.CASCADE)
