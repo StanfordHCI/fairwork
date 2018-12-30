@@ -2,8 +2,42 @@
 
 {% block content %}
 
-  <h5>Freeze payments to worker {{ worker.id }}</h5>
+  <h4>Freeze payments to worker {{ worker.id }}</h4>
 
-  <p>Freezing payments will pause a Fair Work bonus payment from being sent to a worker. </p>
+  <p>Freezing payments will pause a Fair Work bonus payment from being sent to a worker. This can be highly disruptive to the worker, so should only be used in extreme cases where collusion, malice, or substantial error is suspected. Freezing will send a message to the worker, and they will be encouraged to reach out to you to resolve the situation.</p>
+
+  <p>
+    <button class="btn btn-default">Freeze payments</button>
+  </p>
+
+  {% for status, hittype_durations in status_durations.items %}
+
+    {% if status == 'pending' %}
+    <h5>Pending Fair Work payments</h5>
+    {% elif status == 'completed' %}
+    <h5>Completed Fair Work payments</h5>
+    {% endif %}
+
+    {% for hittype, hittype_median_durations in hittype_durations.items %}
+      <p>
+        HIT Type {{hittype.id}}
+        <ul>
+          {% for cur_worker, cur_worker_median_duration in hittype_median_durations.items %}
+          <li>
+            {% if cur_worker.id == worker.id %}
+              <span class="highlight-text">{{ cur_worker.id }}</span>'s
+            {% else %}
+              {{ cur_worker.id }}'s
+            {% endif %}
+
+            median report: {{ cur_worker_median_duration }}</li>
+          {% endfor %}
+          {% if hittype_median_durations.keys|length == 1 %}
+          <li>No other workers submitted time reports for this task</li>
+          {% endif %}
+        </ul>
+      </p>
+    {% endfor %}
+  {% endfor %}
 
 {% endblock %}
