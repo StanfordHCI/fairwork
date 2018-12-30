@@ -207,3 +207,17 @@ form.signup td input {
 .errorlist .alert-link {
   color: #66512c;
 }
+
+.btn-default {
+  background-color: #EFEFEF;
+  border-color: #aaaaaa;
+}
+
+.btn-primary {
+  background-color: #7D0612;
+  border-color: #aaaaaa;
+}
+
+.highlight-text {
+  color: #7D0612;
+}
