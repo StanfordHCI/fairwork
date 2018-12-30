@@ -12,7 +12,6 @@ class RequesterForm(forms.Form):
     @cached_property
     def aws_account(self):
         try:
-            print("Getting AWS")
             client = boto3.client("sts", aws_access_key_id=self.cleaned_data['key'], aws_secret_access_key=self.cleaned_data['secret'])
             aws_account = client.get_caller_identity()["Account"]
             return aws_account
