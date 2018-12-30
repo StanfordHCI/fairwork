@@ -7,15 +7,18 @@ from django.core.signing import Signer
 from django.template import loader
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
+from django.db.models import Q
 
 
-from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, Requester
+from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester
 from .forms import RequesterForm
 from auditor.management.commands.pullnotifications import get_mturk_connection
 from auditor.management.commands.auditpayments import get_salt
 
 from datetime import timedelta
+from collections import defaultdict
 import boto3
+from statistics import median
 
 @csrf_exempt
 @xframe_options_exempt
@@ -220,7 +223,45 @@ def freeze(request, requester, worker_signed):
     worker_id = signer.unsign(worker_signed)
     worker = Worker.objects.get(id = worker_id)
 
-    return render(request, 'freeze.html', context = { 'requester': requester, 'worker': worker })
+    statuses = ['pending', 'completed']
+    status_durations = dict()
+
+    for status in statuses:
+        audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester).filter(message_sent__isnull = False)
+        if status == 'pending':
+            audits = audits.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN))
+        elif status == 'completed':
+            audits = audits.filter(Q(status = AssignmentAudit.PAID) | Q(status = AssignmentAudit.NO_PAYMENT_NEEDED))
+        else:
+            raise Exception("Unknown status: %s" (status))
+
+        hittypes = HITType.objects.filter(hit__assignment__assignmentaudit__in = audits).distinct()
+
+        hittype_durations = dict()
+        for hit_type in hittypes:
+
+            duration_query = AssignmentDuration.objects.filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = audits)
+            worker_durations = defaultdict(list)
+
+            # Take the median report for each worker
+            for duration in duration_query:
+                worker_durations[duration.assignment.worker].append(duration.duration)
+
+            # Now find the median per worker
+            worker_median_durations = dict()
+            for worker in worker_durations.keys():
+                worker_median_durations[worker] = median(worker_durations[worker])
+            hittype_durations[hit_type] = worker_median_durations
+
+        status_durations[status] = hittype_durations
+
+    context = {
+        'requester': requester,
+        'worker': worker,
+        'status_durations': status_durations
+    }
+
+    return render(request, 'freeze.html', context)
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')
