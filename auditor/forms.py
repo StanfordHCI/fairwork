@@ -22,3 +22,7 @@ class RequesterForm(forms.Form):
     def clean(self):
         if self.aws_account is None:
             raise forms.ValidationError('Your AWS keys are incorrect. Please check them and try again.', code="aws_account")
+
+
+class FreezeForm(forms.Form):
+    reason = forms.CharField(widget=forms.Textarea, label='Reason for freezing payments')
