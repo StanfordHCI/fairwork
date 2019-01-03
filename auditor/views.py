@@ -10,8 +10,8 @@ from django.urls import reverse
 from django.db.models import Q
 
 
-from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester
-from .forms import RequesterForm
+from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester, RequesterFreeze
+from .forms import RequesterForm, FreezeForm
 from auditor.management.commands.pullnotifications import get_mturk_connection
 from auditor.management.commands.auditpayments import get_salt
 
@@ -255,10 +255,28 @@ def freeze(request, requester, worker_signed):
 
         status_durations[status] = hittype_durations
 
+    # if this is a POST request we need to process the freeze form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = FreezeForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            freeze = RequesterFreeze(worker=worker, requester=requester, reason=form.cleaned_data['reason'])
+            freeze.save()
+    else:
+        form = FreezeForm()
+
+    frozen = False
+    if RequesterFreeze.objects.filter(worker=worker, requester=requester).count() > 0:
+        # there's a freeze in place
+        frozen = True
+
     context = {
         'requester': requester,
         'worker': worker,
-        'status_durations': status_durations
+        'status_durations': status_durations,
+        'form': form,
+        'frozen': frozen
     }
 
     return render(request, 'freeze.html', context)
