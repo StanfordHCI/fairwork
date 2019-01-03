@@ -50,7 +50,11 @@
         <div class="modal-body">
           <p>Freezing payments will prevent bonuses from being sent to this worker, and will remove the worker's time estimates from any of your currently pending and future tasks.</p>
           <p>We encourage you to engage with a dialog with the worker to resolve the issue. Please state the reason for your freeze, which will be sent to the worker to begin the conversation.</p>
-          <p>FORMFORMFORMFORMFORM</p>
+          <form action="" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit">
+          </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
