@@ -68,7 +68,7 @@ class Command(BaseCommand):
 
         # Send the bonus
         # Construct the message to the worker
-        message = auditpayments.audit_list_message(assignments_to_bonus, True, False)
+        message = auditpayments.audit_list_message(assignments_to_bonus, requester, True, False, is_sandbox)
         # Bonus worker on first assignment in the HITGroup (to avoid being spammy) and keep a record
         assignment_to_bonus = assignments_to_bonus[0] # Arbitrarily attach it to the first one
         token = '%s: %.2f' % (assignment_to_bonus.assignment.id, total_unpaid) # sending the same token prevents AMT from sending the same bonus twice

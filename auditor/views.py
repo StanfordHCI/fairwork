@@ -13,7 +13,9 @@ from django.db.models import Q
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester, RequesterFreeze
 from .forms import RequesterForm, FreezeForm
 from auditor.management.commands.pullnotifications import get_mturk_connection
-from auditor.management.commands.auditpayments import get_salt
+# from auditor.management.commands.auditpayments import get_salt
+from auditor.management.commands import auditpayments
+
 
 from datetime import timedelta
 from collections import defaultdict
@@ -176,7 +178,7 @@ def load_js(request):
 @xframe_options_exempt
 def iframe(request):
     worker_id = request.GET.get('workerId')
-    w = Worker.objects.get(id = worker_id)
+    w, w_created = Worker.objects.get_or_create(id = worker_id)
 
     context = {
         'DURATION_URL': request.build_absolute_uri('duration'),
@@ -218,7 +220,7 @@ def script(request):
     return render(request, 'script.html', context)
 
 def freeze(request, requester, worker_signed):
-    signer = Signer(salt=get_salt())
+    signer = Signer(salt=auditpayments.get_salt())
     requester = Requester.objects.get(aws_account = requester)
     worker_id = signer.unsign(worker_signed)
     worker = Worker.objects.get(id = worker_id)
@@ -249,21 +251,49 @@ def freeze(request, requester, worker_signed):
 
             # Now find the median per worker
             worker_median_durations = dict()
-            for worker in worker_durations.keys():
-                worker_median_durations[worker] = median(worker_durations[worker])
+            for some_worker in worker_durations.keys():
+                worker_median_durations[worker] = median(worker_durations[some_worker])
             hittype_durations[hit_type] = worker_median_durations
 
         status_durations[status] = hittype_durations
 
     # if this is a POST request we need to process the freeze form data
-    if request.method == 'POST':
+    if request.method == 'POST' and 'create' in request.POST.keys():
         # create a form instance and populate it with data from the request:
         form = FreezeForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
             freeze = RequesterFreeze(worker=worker, requester=requester, reason=form.cleaned_data['reason'])
             freeze.save()
+            # set assignment audit as frozen here
+            to_freeze = Assignment.objects.filter(worker=worker)
+
+            for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.UNPAID):
+                for assignment in to_freeze:
+                    if assignment.id == assignmentaudit.assignment_id:
+                        assignmentaudit.status = AssignmentAudit.FROZEN
+                        assignmentaudit.save()
+                        break
+
+            # rerun auditpayments
+
+    elif request.method == 'POST' and 'delete' in request.POST.keys():
+        form = FreezeForm()
+        RequesterFreeze.objects.filter(worker=worker, requester=requester).delete()
+
+        to_unfreeze = Assignment.objects.filter(worker=worker)
+
+        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.FROZEN):
+                for assignment in to_unfreeze:
+                    if assignment.id == assignmentaudit.assignment_id:
+                        assignmentaudit.status = AssignmentAudit.UNPAID
+                        assignmentaudit.save()
+                        break
+
+        # rerun auditpayments
+
     else:
+        print("should be here")
         form = FreezeForm()
 
     frozen = False
@@ -278,6 +308,8 @@ def freeze(request, requester, worker_signed):
         'form': form,
         'frozen': frozen
     }
+
+    print(context)
 
     return render(request, 'freeze.html', context)
 

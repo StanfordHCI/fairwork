@@ -17,7 +17,7 @@ from datetime import timedelta
 
 import boto3
 
-from auditor.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester
+from auditor.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester, RequesterFreeze
 from auditor.management.commands.pullnotifications import get_mturk_connection
 
 """
@@ -45,20 +45,23 @@ class Command(BaseCommand):
 
     def __audit_hits(self, is_sandbox):
         # Gets all assignments that have been accepted but don't have an audit yet
-        auditable = Assignment.objects.filter(status=Assignment.APPROVED).filter(assignmentaudit__isnull
-    =True)
+
+        frozen_workers = set(())
+
+        for freeze_object in RequesterFreeze.objects.all():
+            frozen_workers.add(freeze_object.worker_id)
+
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(worker_id__in = frozen_workers)
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
         else:
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
-
 
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
         for hit_type in hit_type_query:
 
             # Get the HITs that need auditing
             hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable)
-
 
             hit_durations = list()
             for hit in hit_query:
@@ -84,15 +87,25 @@ class Command(BaseCommand):
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
+            current_audit_assignment_ids = []
+
+            for assignmentaudit in AssignmentAudit.objects.all():
+                current_audit_assignment_ids.append(assignmentaudit.assignment_id)
+
             hit_assignments = auditable.filter(hit__in = hit_query)
             for assignment in hit_assignments:
-                audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
-                if not audit.is_underpaid():
-                    audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
-                audit.full_clean()
-                audit.save()
-
-
+                # first check if there is already assignmentaudit for assignmentid
+                if assignment.id in current_audit_assignment_ids:
+                    assignmentaudit.estimated_time = estimated_time
+                    assignmentaudit.estimated_rate = estimated_rate
+                    audit.full_clean()
+                    assignmentaudit.save()
+                else:
+                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
+                    if not audit.is_underpaid():
+                        audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
+                    audit.full_clean()
+                    audit.save()
 
     def __notify_requesters(self, is_sandbox):
         audits = AssignmentAudit.objects.filter(message_sent = None)
@@ -207,6 +220,12 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
         s += "</li>" if is_html else "\n\n"
         message += s
     return message
+
+def is_worker_frozen(worker):
+    for freeze_object in RequesterFreeze.objects.all():
+        if freeze_object.worker == worker:
+            return True;
+    return False;
 
 def get_underpayment(assignments_to_bonus):
     total_unpaid = Decimal('0.00')
