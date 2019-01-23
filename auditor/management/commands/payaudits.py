@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.db.models import Q
 
 import decimal
 from decimal import Decimal
@@ -33,10 +34,17 @@ class Command(BaseCommand):
     def __pay_audited_hits(self):
         grace_period_limit = timezone.now() - auditpayments.REQUESTER_GRACE_PERIOD
         self.stdout.write(self.style.WARNING('Grace period has ended for audits notified before %s' % timezone.localtime(grace_period_limit).strftime("%B %d at %-I:%M%p %Z")))
-
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
-            audits = AssignmentAudit.objects.filter(status = AssignmentAudit.UNPAID).filter(message_sent__lte = grace_period_limit)
+            audits = AssignmentAudit.objects.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN)).filter(message_sent__lte = grace_period_limit)
+
+            # change audits that have status no payment needed to some new status called processed
+            nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.PROCESSED)
+            for assignmentaudit in nopaymentneeded:
+                assignmentaudit.status = AssignmentAudit.NO_PAYMENT_NEEDED
+                assignmentaudit.full_clean()
+                assignmentaudit.save()
+
             if is_sandbox:
                 audits = audits.filter(assignment__hit__hit_type__host__contains = 'sandbox')
             else:
@@ -68,7 +76,7 @@ class Command(BaseCommand):
 
         # Send the bonus
         # Construct the message to the worker
-        message = auditpayments.audit_list_message(assignments_to_bonus, True, False)
+        message = auditpayments.audit_list_message(assignments_to_bonus, requester, True, False, is_sandbox)
         # Bonus worker on first assignment in the HITGroup (to avoid being spammy) and keep a record
         assignment_to_bonus = assignments_to_bonus[0] # Arbitrarily attach it to the first one
         token = '%s: %.2f' % (assignment_to_bonus.assignment.id, total_unpaid) # sending the same token prevents AMT from sending the same bonus twice
