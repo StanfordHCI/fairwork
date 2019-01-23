@@ -87,11 +87,13 @@ class AssignmentAudit(models.Model):
     PAID = 'p'
     NO_PAYMENT_NEEDED = 'n'
     FROZEN = 'f'
+    PROCESSED = 'r'
     STATUS_CHOICES = (
         (UNPAID, 'unpaid'),
         (PAID, 'paid'),
         (NO_PAYMENT_NEEDED, 'no payment needed'),
-        (FROZEN, 'frozen')
+        (FROZEN, 'frozen'),
+        (PROCESSED, 'processed')
     )
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNPAID)
     message_sent = models.DateTimeField(blank=True, null=True)

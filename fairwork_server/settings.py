@@ -18,7 +18,7 @@ SECRET_KEY = '123456789'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'fairwork.stanford.edu', 'fairwork.herokuapp.com']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'fairwork.stanford.edu', 'fairwork.herokuapp.com', 'fairwork-dev.herokuapp.com']
 
 
 # Application definition
@@ -55,7 +55,8 @@ CORS_ORIGIN_WHITELIST = (
     'workersandbox.mturk.com',
     'mturk.com',
     'localhost:8000',
-    '127.0.0.1:8000'
+    '127.0.0.1:8000',
+    'fairwork-dev.herokuapp.com'
 )
 CORS_ALLOW_CREDENTIALS = True
 
@@ -65,7 +66,8 @@ CSRF_TRUSTED_ORIGINS = [
     'workersandbox.mturk.com',
     'mturk.com',
     'localhost:8000',
-    '127.0.0.1:8000'
+    '127.0.0.1:8000',
+    'fairwork-dev.herokuapp.com'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -95,10 +97,21 @@ WSGI_APPLICATION = 'fairwork_server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'd6vh68rsogv0hf',
+        'USER': 'jslptvwwwjmylz',
+        'PASSWORD': '24b0584360aa4cabdef57c8b0c4c6685be19014fb47a149a09444297209d85c4',
+        'HOST': 'ec2-54-163-246-159.compute-1.amazonaws.com',
+        'PORT': '5432',
     }
 }
 
@@ -136,8 +149,8 @@ USE_L10N = True
 USE_TZ = True
 
 EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'sendgrid_username'
-EMAIL_HOST_PASSWORD = 'sendgrid_password'
+EMAIL_HOST_USER = 'app93478768@heroku.com'
+EMAIL_HOST_PASSWORD = 'yekgk8ml8504'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_SUBJECT_PREFIX = "[Fair Work] "
@@ -163,11 +176,11 @@ MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 MINIMUM_WAGE_PER_HOUR = Decimal(11.00) # CA minimum wage 2018
 
 # Change these settings in your local settings file
-WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html'
-REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html'
+WORKER_IRB_TEMPLATE = 'stanford-irb-worker.html'
+REQUESTER_IRB_TEMPLATE = 'stanford-irb-requester.html'
 
-ADMIN_NAME = "Your Admin Name"
-ADMIN_EMAIL = "Your Admin Email"
+ADMIN_NAME = "Fair Work"
+ADMIN_EMAIL = "fairwork@cs.stanford.edu"
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
 
-HOSTNAME = 'https://fairwork.yourdomain.com'
+HOSTNAME = 'https://fairwork-dev.herokuapp.com'
