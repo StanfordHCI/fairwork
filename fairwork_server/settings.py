@@ -18,7 +18,7 @@ SECRET_KEY = '123456789'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'fairwork.stanford.edu', 'fairwork.herokuapp.com']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'fairwork.stanford.edu', 'fairwork.herokuapp.com', 'fairwork-dev.herokuapp.com']
 
 
 # Application definition
