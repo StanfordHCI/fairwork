@@ -55,7 +55,8 @@ CORS_ORIGIN_WHITELIST = (
     'workersandbox.mturk.com',
     'mturk.com',
     'localhost:8000',
-    '127.0.0.1:8000'
+    '127.0.0.1:8000',
+    'fairwork-dev.herokuapp.com'
 )
 CORS_ALLOW_CREDENTIALS = True
 
@@ -65,7 +66,8 @@ CSRF_TRUSTED_ORIGINS = [
     'workersandbox.mturk.com',
     'mturk.com',
     'localhost:8000',
-    '127.0.0.1:8000'
+    '127.0.0.1:8000',
+    'fairwork-dev.herokuapp.com'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
