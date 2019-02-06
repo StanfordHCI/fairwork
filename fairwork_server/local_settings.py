@@ -13,4 +13,4 @@ EMAIL_USE_TLS = True
 
 ALLOWED_HOSTS = []
 
-HOSTNAME = 'http://fairwork-dev.herokuapp.com'
+HOSTNAME = 'https://fairwork-dev.herokuapp.com'
