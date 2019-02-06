@@ -4,6 +4,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.conf import settings
 from django.core.signing import Signer
+from django.core.management import call_command
 from django.template import loader
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
@@ -275,10 +276,29 @@ def freeze(request, requester, worker_signed):
                         assignmentaudit.save()
                         break
 
-            # rerun auditpayments
+            call_command('auditpayments')
+            # show banner to requester saying that you froze worker
+            # send email to worker saying you're frozen
+            # need to get some sort of Mturk object...
+
+            mturk_clients = get_mturk_connection(requester, dict())
+            if is_sandbox:
+                mturk_client = mturk_clients['sandbox']
+            else:
+                mturk_client = mturk_clients['production']
+
+            try:
+                subject = "Frozen"
+                message = "Test"
+                # If a requester is being unreasonable please email 
+                response = mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
+
+            except mturk_client.exceptions.RequestError as e:
+                self.stderr.write(self.style.ERROR(e))
 
     elif request.method == 'POST' and 'delete' in request.POST.keys():
         form = FreezeForm()
+
         RequesterFreeze.objects.filter(worker=worker, requester=requester).delete()
 
         to_unfreeze = Assignment.objects.filter(worker=worker)
@@ -290,10 +310,11 @@ def freeze(request, requester, worker_signed):
                         assignmentaudit.save()
                         break
 
-        # rerun auditpayments
+        call_command('auditpayments')
+        # show banner to requester saying that you unfroze worker
+        # send email to worker saying you're unfrozen
 
     else:
-        print("should be here")
         form = FreezeForm()
 
     frozen = False
