@@ -66,8 +66,7 @@ CSRF_TRUSTED_ORIGINS = [
     'workersandbox.mturk.com',
     'mturk.com',
     'localhost:8000',
-    '127.0.0.1:8000',
-    'fairwork-dev.herokuapp.com'
+    '127.0.0.1:8000'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -172,4 +171,4 @@ ADMIN_NAME = "Your Admin Name"
 ADMIN_EMAIL = "Your Admin Email"
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
 
-HOSTNAME = 'https://fairwork-dev.herokuapp.com'
+HOSTNAME = ''
