@@ -25,4 +25,4 @@ class RequesterForm(forms.Form):
 
 
 class FreezeForm(forms.Form):
-    reason = forms.CharField(widget=forms.Textarea, label='Reason for freezing payments')
+    reason = forms.CharField(widget=forms.Textarea(attrs={"style": "margin: 0px; width: 560px; height: 200px;"}), label='Reason for freezing payments')

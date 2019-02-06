@@ -33,7 +33,6 @@ class Command(BaseCommand):
     def __pay_audited_hits(self):
         grace_period_limit = timezone.now() - auditpayments.REQUESTER_GRACE_PERIOD
         self.stdout.write(self.style.WARNING('Grace period has ended for audits notified before %s' % timezone.localtime(grace_period_limit).strftime("%B %d at %-I:%M%p %Z")))
-
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
             audits = AssignmentAudit.objects.filter(status = AssignmentAudit.UNPAID).filter(message_sent__lte = grace_period_limit)

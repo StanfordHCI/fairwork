@@ -51,13 +51,24 @@ class Command(BaseCommand):
         for freeze_object in RequesterFreeze.objects.all():
             frozen_workers.add(freeze_object.worker_id)
 
-        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(worker_id__in = frozen_workers)
+        current_audit_assignment_ids = []
+        paid_audits = []
+
+        for assignmentaudit in AssignmentAudit.objects.all():
+            current_audit_assignment_ids.append(assignmentaudit.assignment_id)
+
+        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
+            paid_audits.append(assignmentaudit.assignment_id)
+
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(worker_id__in=frozen_workers).exclude(id__in=paid_audits)
+
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
         else:
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
 
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
+
         for hit_type in hit_type_query:
 
             # Get the HITs that need auditing
@@ -87,18 +98,13 @@ class Command(BaseCommand):
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
-            current_audit_assignment_ids = []
-
-            for assignmentaudit in AssignmentAudit.objects.all():
-                current_audit_assignment_ids.append(assignmentaudit.assignment_id)
-
             hit_assignments = auditable.filter(hit__in = hit_query)
             for assignment in hit_assignments:
                 # first check if there is already assignmentaudit for assignmentid
                 if assignment.id in current_audit_assignment_ids:
                     assignmentaudit.estimated_time = estimated_time
                     assignmentaudit.estimated_rate = estimated_rate
-                    audit.full_clean()
+                    assignmentaudit.full_clean()
                     assignmentaudit.save()
                 else:
                     audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
