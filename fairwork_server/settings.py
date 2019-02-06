@@ -18,7 +18,7 @@ SECRET_KEY = '123456789'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'fairwork.stanford.edu', 'fairwork.herokuapp.com']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'fairwork.stanford.edu', 'fairwork.herokuapp.com', 'fairwork-dev.herokuapp.com']
 
 
 # Application definition
@@ -66,7 +66,8 @@ CSRF_TRUSTED_ORIGINS = [
     'workersandbox.mturk.com',
     'mturk.com',
     'localhost:8000',
-    '127.0.0.1:8000'
+    '127.0.0.1:8000',
+    'fairwork-dev.herokuapp.com'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -136,9 +137,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'sendgrid_username'
-EMAIL_HOST_PASSWORD = 'sendgrid_password'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'stanford.hci.mturk@gmail.com'
+EMAIL_HOST_PASSWORD = 'hc1pr1vat3'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_SUBJECT_PREFIX = "[Fair Work] "
@@ -168,7 +169,7 @@ WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html'
 REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html'
 
 ADMIN_NAME = "Your Admin Name"
-ADMIN_EMAIL = "Your Admin Email"
+ADMIN_EMAIL = "stanford.hci.mturk@gmail.com"
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
 
-HOSTNAME = ''
+HOSTNAME = 'https://fairwork-dev.herokuapp.com'
