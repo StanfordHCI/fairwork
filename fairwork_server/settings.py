@@ -172,4 +172,4 @@ ADMIN_NAME = "Your Admin Name"
 ADMIN_EMAIL = "Your Admin Email"
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
 
-HOSTNAME = ''
+HOSTNAME = 'https://fairwork-dev.herokuapp.com'
