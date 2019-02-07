@@ -217,7 +217,10 @@ def keys(request):
 
 def update_keys(key, secret, email, aws_account):
     print("called")
-    __create_or_update_requester(aws_account, key, secret, email)
+    try:
+        __create_or_update_requester(aws_account, key, secret, email)
+    except Exception as e:
+        print(e)
     print("finished")
 
 def script(request):
