@@ -197,9 +197,11 @@ def iframe(request):
 def keys(request):
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
+        print("hi")
         form = RequesterForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
+            print("can we see this?")
             update_keys(form.cleaned_data['key'], form.cleaned_data['secret'], form.cleaned_data['email'], form.aws_account)
             return HttpResponseRedirect('/script?aws_account=' + form.aws_account)
         else:
@@ -214,7 +216,9 @@ def keys(request):
     return render(request, 'keys.html', context)
 
 def update_keys(key, secret, email, aws_account):
+    print("called")
     __create_or_update_requester(aws_account, key, secret, email)
+    print("finished")
 
 def script(request):
     aws_account = request.GET.get('aws_account')
