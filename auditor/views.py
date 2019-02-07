@@ -202,6 +202,8 @@ def keys(request):
         if form.is_valid():
             update_keys(form.cleaned_data['key'], form.cleaned_data['secret'], form.cleaned_data['email'], form.aws_account)
             return HttpResponseRedirect('/script?aws_account=' + form.aws_account)
+        else:
+            print("Form not valid?")
     else:
         form = RequesterForm()
     context = {
