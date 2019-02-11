@@ -3,7 +3,7 @@ import django_heroku
 import dj_database_url
 import os
 
-DEBUG = False
+DEBUG = True
 
 SECURE_SSL_REDIRECT = True
 CSRF_COOKIE_SECURE = True
