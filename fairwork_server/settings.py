@@ -148,9 +148,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'stanford.hci.mturk@gmail.com'
-EMAIL_HOST_PASSWORD = 'hc1pr1vat3'
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'app93478768@heroku.com'
+EMAIL_HOST_PASSWORD = 'yekgk8ml8504'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_SUBJECT_PREFIX = "[Fair Work] "
