@@ -176,11 +176,11 @@ MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
 MINIMUM_WAGE_PER_HOUR = Decimal(11.00) # CA minimum wage 2018
 
 # Change these settings in your local settings file
-WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html'
-REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html'
+WORKER_IRB_TEMPLATE = 'stanford-irb-worker.html'
+REQUESTER_IRB_TEMPLATE = 'stanford-irb-requester.html'
 
-ADMIN_NAME = "Your Admin Name"
-ADMIN_EMAIL = "stanford.hci.mturk@gmail.com"
+ADMIN_NAME = "Fair Work"
+ADMIN_EMAIL = "fairwork@cs.stanford.edu"
 ADMINS = [(ADMIN_NAME, ADMIN_EMAIL), ]
 
 HOSTNAME = 'https://fairwork-dev.herokuapp.com'
