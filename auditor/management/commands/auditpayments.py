@@ -37,7 +37,7 @@ class Command(BaseCommand):
     mturk = dict() # maintains the Boto client connections
 
     def handle(self, *args, **options):
-        for is_sandbox in [False, True]:
+        for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
             self.__audit_hits(is_sandbox)
             self.__notify_requesters(is_sandbox)
@@ -129,7 +129,6 @@ class Command(BaseCommand):
     def __notify_requester(self, requester, requester_audit, is_sandbox):
         email = requester.email
         self.stdout.write(email)
-        print(requester_audit)
         plain_message = audit_list_message(requester_audit, requester, False, False, is_sandbox)
         html_message = audit_list_message(requester_audit, requester, False, True, is_sandbox)
         self.stdout.write(plain_message)
@@ -183,9 +182,11 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
     message += "</p><ul>" if is_html else "\n\n"
 
     hit_types = HITType.objects.filter(hit__assignment__assignmentaudit__in = assignments_to_bonus).distinct()
+    print("hit types")
     print(hit_types)
     for hit_type in hit_types:
         hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
+        print("hit type assignments")
         print(hittype_assignments)
         hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
         workers = Worker.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
@@ -209,6 +210,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
+            print("duration query")
+            print(duration_query)
             # find the worker's median report for this HITType
             # uh oh sometimes duration query is empty now...
             median_duration = median(duration_query.values_list('duration', flat=True))
