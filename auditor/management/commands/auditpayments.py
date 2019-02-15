@@ -37,7 +37,7 @@ class Command(BaseCommand):
     mturk = dict() # maintains the Boto client connections
 
     def handle(self, *args, **options):
-        for is_sandbox in [True, False]:
+        for is_sandbox in [False, True]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
             self.__audit_hits(is_sandbox)
             self.__notify_requesters(is_sandbox)
@@ -209,8 +209,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
-            print(duration_query)
             # find the worker's median report for this HITType
+            # uh oh sometimes duration query is empty now...
             median_duration = median(duration_query.values_list('duration', flat=True))
             median_nomicroseconds = str(median_duration).split(".")[0]
             s += "<li>" if is_html else "\t"
