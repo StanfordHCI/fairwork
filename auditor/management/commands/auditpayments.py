@@ -150,6 +150,7 @@ class Command(BaseCommand):
 REQUESTER_GRACE_PERIOD = timedelta(hours = 0) if settings.DEBUG else timedelta(hours = 12)
 
 def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_sandbox):
+    print(assignments_to_bonus)
     total_unpaid = get_underpayment(assignments_to_bonus)
     signer = Signer(salt=get_salt())
 
@@ -214,21 +215,20 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
             print(duration_query)
             # find the worker's median report for this HITType
             # uh oh sometimes duration query is empty now...
-            if len(duration_query) > 0:
-                median_duration = median(duration_query.values_list('duration', flat=True))
-                median_nomicroseconds = str(median_duration).split(".")[0]
-                s += "<li>" if is_html else "\t"
-                s += "Worker %s: " % worker.id
-                s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
-                if not is_worker:
-                    worker_signed = signer.sign(worker.id)
-                    freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
+            median_duration = median(duration_query.values_list('duration', flat=True))
+            median_nomicroseconds = str(median_duration).split(".")[0]
+            s += "<li>" if is_html else "\t"
+            s += "Worker %s: " % worker.id
+            s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
+            if not is_worker:
+                worker_signed = signer.sign(worker.id)
+                freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
 
-                    if is_html:
-                        s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
-                    else:
-                        s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
-                s += "</li>" if is_html else "\n"
+                if is_html:
+                    s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
+                else:
+                    s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
+            s += "</li>" if is_html else "\n"
 
         s += "</li>" if is_html else "\n\n"
         message += s

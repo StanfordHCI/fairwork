@@ -179,6 +179,7 @@ def load_js(request):
 @xframe_options_exempt
 def iframe(request):
     worker_id = request.GET.get('workerId')
+    # if worker_id:
     w, w_created = Worker.objects.get_or_create(id = worker_id)
 
     context = {
