@@ -57,10 +57,10 @@ class Command(BaseCommand):
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
+        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.UNPAID):
             paid_audits.append(assignmentaudit.assignment_id)
 
-        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(worker_id__in=frozen_workers).exclude(id__in=paid_audits)
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits)
 
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
@@ -76,12 +76,11 @@ class Command(BaseCommand):
 
             hit_durations = list()
             for hit in hit_query:
-                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit)
-
+                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers)
                 # Take the median report for all assignments in that HIT
-                if len(duration_query) > 0:
-                    median_duration = median(duration_query.values_list('duration', flat=True))
-                    hit_durations.append(median_duration)
+                # if len(duration_query) > 0:
+                median_duration = median(duration_query.values_list('duration', flat=True))
+                hit_durations.append(median_duration)
 
             # now, hit_durations contains the median reported time for each HIT
             # that has at least one assignment needing an audit.

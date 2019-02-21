@@ -123,17 +123,26 @@ def assignment_duration(request):
     else:
         r = hit_type.requester
 
-    minutes = float(__get_POST_param(request, 'duration'))
-    duration = timedelta(minutes=minutes)
+    strTime = __get_POST_param(request, 'duration')
+    if (strTime == ""):
+        AssignmentDuration.objects.filter(assignment=assignment).delete()
 
-    at, created = AssignmentDuration.objects.update_or_create(
-        assignment = assignment,
-        defaults = {
-            'duration': duration
-        }
-    )
+        return HttpResponse("Deleted duration for %s" % (assignment))        
+    else:
+        try:
+            minutes = float(strTime)
+            duration = timedelta(minutes=minutes)
 
-    return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
+            at, created = AssignmentDuration.objects.update_or_create(
+                assignment = assignment,
+                defaults = {
+                    'duration': duration
+                }
+            )
+
+            return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
+        except ValueError:
+            return HttpResponse("Not a valid input")
 
 @csrf_exempt
 def irb_agreement(request):
