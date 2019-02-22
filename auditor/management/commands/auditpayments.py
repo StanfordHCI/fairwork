@@ -77,6 +77,8 @@ class Command(BaseCommand):
             hit_durations = list()
             for hit in hit_query:
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers)
+                print("duration query")
+                print(duration_query)
                 # Take the median report for all assignments in that HIT
                 # duration query can be empty if all of the people who submitted this assignment are now frozen
                 if len(duration_query) > 0:
@@ -123,6 +125,8 @@ class Command(BaseCommand):
 
 
         requesters = Requester.objects.filter(hittype__hit__assignment__assignmentaudit__in = audits).distinct()
+        print("requesters: ")
+        print(requesters)
         for requester in requesters:
             requester_audit = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
             self.__notify_requester(requester, requester_audit, is_sandbox)
