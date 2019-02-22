@@ -224,7 +224,7 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
             print(duration_query)
             # find the worker's median report for this HITType
             # uh oh sometimes duration query is empty now...
-            if len(duration_query > 0):
+            if len(duration_query) > 0:
                 median_duration = median(duration_query.values_list('duration', flat=True))
                 median_nomicroseconds = str(median_duration).split(".")[0]
                 s += "<li>" if is_html else "\t"
