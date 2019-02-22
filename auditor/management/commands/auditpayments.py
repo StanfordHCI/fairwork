@@ -57,10 +57,12 @@ class Command(BaseCommand):
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.UNPAID):
+        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
             paid_audits.append(assignmentaudit.assignment_id)
 
         auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits)
+        print("auditable")
+        print(auditable)
 
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
@@ -68,11 +70,12 @@ class Command(BaseCommand):
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
 
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
+        print(hit_type_query)
 
         for hit_type in hit_type_query:
-
             # Get the HITs that need auditing
             hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable)
+            print(hit_query)
 
             hit_durations = list()
             for hit in hit_query:
