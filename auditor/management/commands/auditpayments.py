@@ -61,8 +61,8 @@ class Command(BaseCommand):
             paid_audits.append(assignmentaudit.assignment_id)
 
         auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits).distinct()
-        print("auditable")
-        print(auditable)
+        # print("auditable")
+        # print(auditable)
 
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
@@ -70,18 +70,18 @@ class Command(BaseCommand):
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
 
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
-        print(hit_type_query)
+        # print(hit_type_query)
 
         for hit_type in hit_type_query:
             # Get the HITs that need auditing
             hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable).distinct()
-            print(hit_query)
+            # print(hit_query)
 
             hit_durations = list()
             for hit in hit_query:
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
-                print("duration query")
-                print(duration_query)
+                # print("duration query")
+                # print(duration_query)
                 # Take the median report for all assignments in that HIT
                 # duration query can be empty if all of the people who submitted this assignment are now frozen
                 if len(duration_query) > 0:
@@ -166,7 +166,7 @@ class Command(BaseCommand):
 REQUESTER_GRACE_PERIOD = timedelta(hours = 0) if settings.DEBUG else timedelta(hours = 12)
 
 def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_sandbox):
-    print(assignments_to_bonus)
+    # print(assignments_to_bonus)
     total_unpaid = get_underpayment(assignments_to_bonus)
     signer = Signer(salt=get_salt())
 
@@ -199,12 +199,12 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
     message += "</p><ul>" if is_html else "\n\n"
 
     hit_types = HITType.objects.filter(hit__assignment__assignmentaudit__in = assignments_to_bonus).distinct()
-    print("hit types")
-    print(hit_types)
+    # print("hit types")
+    # print(hit_types)
     for hit_type in hit_types:
         hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
-        print("hit type assignments")
-        print(hittype_assignments)
+        # print("hit type assignments")
+        # print(hittype_assignments)
         hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
         workers = Worker.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
 
@@ -227,8 +227,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
-            print("duration query")
-            print(duration_query)
+            # print("duration query")
+            # print(duration_query)
             # find the worker's median report for this HITType
             # uh oh sometimes duration query is empty now...
             if len(duration_query) > 0:
