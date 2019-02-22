@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from django.db.models import Avg, Sum, F, Q
+from django.db.models import Avg, Sum, F
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.template.defaultfilters import pluralize
