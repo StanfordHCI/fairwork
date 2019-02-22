@@ -56,6 +56,7 @@ class Command(BaseCommand):
 
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
+            print("1 hi")
             print(assignmentaudit.estimated_rate);
             print(assignmentaudit.estimated_time);
 
@@ -115,6 +116,7 @@ class Command(BaseCommand):
                         # print("assignment audit")
                         # print(assignmentaudit)
                         if estimated_time != assignmentaudit.estimated_time or estimated_rate != assignmentaudit.estimated_rate:
+                            print("2 yo")
                             print(estimated_time)
                             print(assignmentaudit.estimated_time)
                             print(estimated_rate)
@@ -124,11 +126,12 @@ class Command(BaseCommand):
                             assignmentaudit.message_sent = None
                             assignmentaudit.full_clean()
                             assignmentaudit.save()
+                            current_audit_assignment_ids.append(assignment.id)
                     else:
-                        print(estimated_time)
-                        print(assignmentaudit.estimated_time)
-                        print(estimated_rate)
-                        print(assignmentaudit.estimated_rate)
+                        # print(estimated_time)
+                        # print(assignmentaudit.estimated_time)
+                        # print(estimated_rate)
+                        # print(assignmentaudit.estimated_rate)
                         audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
                         if not audit.is_underpaid():
                             audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
