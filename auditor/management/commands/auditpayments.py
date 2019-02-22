@@ -1,11 +1,11 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from django.db.models import Avg, Sum, F
+from django.db.models import Avg, Sum, F, Q
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.template.defaultfilters import pluralize
 from django.core.signing import Signer
-
+from django.urls import reverse
 
 
 from statistics import median
@@ -191,6 +191,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
     for hit_type in hit_types:
         hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
+        # print("hit type assignments")
+        # print(hittype_assignments)
         hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
         workers = Worker.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
 
@@ -213,6 +215,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
+            # print("duration query")
+            # print(duration_query)
             # find the worker's median report for this HITType
             # uh oh sometimes duration query is empty now...
             if len(duration_query) > 0:
