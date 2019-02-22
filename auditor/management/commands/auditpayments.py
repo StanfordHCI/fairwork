@@ -73,7 +73,6 @@ class Command(BaseCommand):
         for hit_type in hit_type_query:
             # Get the HITs that need auditing
             hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable).distinct()
-            print(hit_query)
 
             hit_durations = list()
             for hit in hit_query:
@@ -126,8 +125,7 @@ class Command(BaseCommand):
 
 
         requesters = Requester.objects.filter(hittype__hit__assignment__assignmentaudit__in = audits).distinct()
-        print("requesters: ")
-        print(requesters)
+
         for requester in requesters:
             requester_audit = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
             self.__notify_requester(requester, requester_audit, is_sandbox)
