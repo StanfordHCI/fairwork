@@ -78,39 +78,40 @@ class Command(BaseCommand):
             for hit in hit_query:
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers)
                 # Take the median report for all assignments in that HIT
-                # if len(duration_query) > 0:
-                median_duration = median(duration_query.values_list('duration', flat=True))
-                hit_durations.append(median_duration)
+                # duration query can be empty if all of the people who submitted this assignment are now frozen
+                if len(duration_query) > 0:
+                    median_duration = median(duration_query.values_list('duration', flat=True))
+                    hit_durations.append(median_duration)
 
-            # now, hit_durations contains the median reported time for each HIT
-            # that has at least one assignment needing an audit.
-            # next step: take the median of the medians across these HITs to
-            # calculate the overall effective time
-            if len(hit_durations) == 0:
-                # nobody reported anything
-                status = AssignmentAudit.NO_PAYMENT_NEEDED
-                estimated_time = None
-                estimated_rate = None
-            else:
-                estimated_time = median(hit_durations)
-                estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
-                if estimated_rate == 0:
-                    estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
-
-            hit_assignments = auditable.filter(hit__in = hit_query)
-            for assignment in hit_assignments:
-                # first check if there is already assignmentaudit for assignmentid
-                if assignment.id in current_audit_assignment_ids:
-                    assignmentaudit.estimated_time = estimated_time
-                    assignmentaudit.estimated_rate = estimated_rate
-                    assignmentaudit.full_clean()
-                    assignmentaudit.save()
+                # now, hit_durations contains the median reported time for each HIT
+                # that has at least one assignment needing an audit.
+                # next step: take the median of the medians across these HITs to
+                # calculate the overall effective time
+                if len(hit_durations) == 0:
+                    # nobody reported anything
+                    status = AssignmentAudit.NO_PAYMENT_NEEDED
+                    estimated_time = None
+                    estimated_rate = None
                 else:
-                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
-                    if not audit.is_underpaid():
-                        audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
-                    audit.full_clean()
-                    audit.save()
+                    estimated_time = median(hit_durations)
+                    estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
+                    if estimated_rate == 0:
+                        estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
+
+                hit_assignments = auditable.filter(hit__in = hit_query)
+                for assignment in hit_assignments:
+                    # first check if there is already assignmentaudit for assignmentid
+                    if assignment.id in current_audit_assignment_ids:
+                        assignmentaudit.estimated_time = estimated_time
+                        assignmentaudit.estimated_rate = estimated_rate
+                        assignmentaudit.full_clean()
+                        assignmentaudit.save()
+                    else:
+                        audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
+                        if not audit.is_underpaid():
+                            audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
+                        audit.full_clean()
+                        audit.save()
 
     def __notify_requesters(self, is_sandbox):
         audits = AssignmentAudit.objects.filter(message_sent = None)
