@@ -1,11 +1,11 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from django.db.models import Avg, Sum, F
+from django.db.models import Avg, Sum, F, Q
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.template.defaultfilters import pluralize
 from django.core.signing import Signer
-from django.urls import reverse
+
 
 
 from statistics import median
@@ -56,17 +56,12 @@ class Command(BaseCommand):
 
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
-            # print("1 hi")
-            # print(assignmentaudit.estimated_rate);
-            # print(assignmentaudit.estimated_time);
 
 
         for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
             paid_audits.append(assignmentaudit.assignment_id)
 
         auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits).distinct()
-        # print("auditable")
-        # print(auditable)
 
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
@@ -74,14 +69,6 @@ class Command(BaseCommand):
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
 
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
-        print("HERE HERE HERE")
-        print(hit_type_query)
-
-        # for assignmentaudit in AssignmentAudit.objects.all():
-        #     current_audit_assignment_ids.append(assignmentaudit.assignment_id)
-        #     print("2 hi")
-        #     print(assignmentaudit.estimated_rate);
-        #     print(assignmentaudit.estimated_time);
 
         for hit_type in hit_type_query:
             # Get the HITs that need auditing
@@ -91,10 +78,7 @@ class Command(BaseCommand):
             hit_durations = list()
             for hit in hit_query:
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
-                # print("duration query")
-                # print(duration_query)
-                # Take the median report for all assignments in that HIT
-                # duration query can be empty if all of the people who submitted this assignment are now frozen
+
                 if len(duration_query) > 0:
                     median_duration = median(duration_query.values_list('duration', flat=True))
                     hit_durations.append(median_duration)
@@ -119,14 +103,7 @@ class Command(BaseCommand):
                     # first check if there is already assignmentaudit for assignmentid
                     if assignment.id in current_audit_assignment_ids:
                         assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
-                        # print("assignment audit")
-                        # print(assignmentaudit)
                         if estimated_time != assignmentaudit.estimated_time or estimated_rate != assignmentaudit.estimated_rate:
-                            print("2 yo")
-                            print(estimated_time)
-                            print(assignmentaudit.estimated_time)
-                            print(estimated_rate)
-                            print(assignmentaudit.estimated_rate)
                             assignmentaudit.estimated_time = estimated_time
                             assignmentaudit.estimated_rate = estimated_rate
                             assignmentaudit.message_sent = None
@@ -134,10 +111,6 @@ class Command(BaseCommand):
                             assignmentaudit.save()
                             current_audit_assignment_ids.append(assignment.id)
                     else:
-                        # print(estimated_time)
-                        # print(assignmentaudit.estimated_time)
-                        # print(estimated_rate)
-                        # print(assignmentaudit.estimated_rate)
                         audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
                         if not audit.is_underpaid():
                             audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
@@ -183,7 +156,6 @@ class Command(BaseCommand):
 REQUESTER_GRACE_PERIOD = timedelta(hours = 0) if settings.DEBUG else timedelta(hours = 12)
 
 def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_sandbox):
-    # print(assignments_to_bonus)
     total_unpaid = get_underpayment(assignments_to_bonus)
     signer = Signer(salt=get_salt())
 
@@ -216,12 +188,9 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
     message += "</p><ul>" if is_html else "\n\n"
 
     hit_types = HITType.objects.filter(hit__assignment__assignmentaudit__in = assignments_to_bonus).distinct()
-    # print("hit types")
-    # print(hit_types)
+
     for hit_type in hit_types:
         hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
-        # print("hit type assignments")
-        # print(hittype_assignments)
         hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
         workers = Worker.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
 
@@ -244,8 +213,6 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
-            # print("duration query")
-            # print(duration_query)
             # find the worker's median report for this HITType
             # uh oh sometimes duration query is empty now...
             if len(duration_query) > 0:
