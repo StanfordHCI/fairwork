@@ -36,7 +36,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Grace period has ended for audits notified before %s' % timezone.localtime(grace_period_limit).strftime("%B %d at %-I:%M%p %Z")))
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
-            audits = AssignmentAudit.objects.filter(Q(status = AssignmentAudit.UNPAID) | Q(AssignmentAudit.FROZEN)).filter(message_sent__lte = grace_period_limit)
+            audits = AssignmentAudit.objects.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN)).filter(message_sent__lte = grace_period_limit)
             if is_sandbox:
                 audits = audits.filter(assignment__hit__hit_type__host__contains = 'sandbox')
             else:
