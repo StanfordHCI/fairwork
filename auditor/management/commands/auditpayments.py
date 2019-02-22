@@ -110,6 +110,7 @@ class Command(BaseCommand):
                         assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
                         assignmentaudit.estimated_time = estimated_time
                         assignmentaudit.estimated_rate = estimated_rate
+                        assignmentaudit.message_sent = None
                         assignmentaudit.full_clean()
                         assignmentaudit.save()
                     else:
