@@ -76,11 +76,11 @@ class Command(BaseCommand):
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
         # print(hit_type_query)
 
-        for assignmentaudit in AssignmentAudit.objects.all():
-            current_audit_assignment_ids.append(assignmentaudit.assignment_id)
-            print("2 hi")
-            print(assignmentaudit.estimated_rate);
-            print(assignmentaudit.estimated_time);
+        # for assignmentaudit in AssignmentAudit.objects.all():
+        #     current_audit_assignment_ids.append(assignmentaudit.assignment_id)
+        #     print("2 hi")
+        #     print(assignmentaudit.estimated_rate);
+        #     print(assignmentaudit.estimated_time);
 
         for hit_type in hit_type_query:
             # Get the HITs that need auditing
@@ -126,6 +126,8 @@ class Command(BaseCommand):
                     # first check if there is already assignmentaudit for assignmentid
                     if assignment.id in current_audit_assignment_ids:
                         assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
+                        print(assignmentaudit.estimated_time)
+                        print(assignmentaudit.estimated_rate)
                         # print("assignment audit")
                         # print(assignmentaudit)
                         if estimated_time != assignmentaudit.estimated_time or estimated_rate != assignmentaudit.estimated_rate:
