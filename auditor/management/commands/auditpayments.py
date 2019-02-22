@@ -60,7 +60,7 @@ class Command(BaseCommand):
         for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
             paid_audits.append(assignmentaudit.assignment_id)
 
-        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits)
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits).distinct()
         print("auditable")
         print(auditable)
 
@@ -74,12 +74,12 @@ class Command(BaseCommand):
 
         for hit_type in hit_type_query:
             # Get the HITs that need auditing
-            hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable)
+            hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable).distinct()
             print(hit_query)
 
             hit_durations = list()
             for hit in hit_query:
-                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers)
+                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
                 print("duration query")
                 print(duration_query)
                 # Take the median report for all assignments in that HIT
