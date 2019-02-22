@@ -108,11 +108,12 @@ class Command(BaseCommand):
                     # first check if there is already assignmentaudit for assignmentid
                     if assignment.id in current_audit_assignment_ids:
                         assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
-                        assignmentaudit.estimated_time = estimated_time
-                        assignmentaudit.estimated_rate = estimated_rate
-                        assignmentaudit.message_sent = None
-                        assignmentaudit.full_clean()
-                        assignmentaudit.save()
+                        if estimated_time != assignmentaudit.estimated_time or estimated_rate != assignmentaudit.estimated_rate:
+                            assignmentaudit.estimated_time = estimated_time
+                            assignmentaudit.estimated_rate = estimated_rate
+                            assignmentaudit.message_sent = None
+                            assignmentaudit.full_clean()
+                            assignmentaudit.save()
                     else:
                         audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
                         if not audit.is_underpaid():
