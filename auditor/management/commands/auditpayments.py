@@ -102,6 +102,7 @@ class Command(BaseCommand):
                 for assignment in hit_assignments:
                     # first check if there is already assignmentaudit for assignmentid
                     if assignment.id in current_audit_assignment_ids:
+                        assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
                         assignmentaudit.estimated_time = estimated_time
                         assignmentaudit.estimated_rate = estimated_rate
                         assignmentaudit.full_clean()
