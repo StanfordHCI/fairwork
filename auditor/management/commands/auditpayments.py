@@ -106,13 +106,14 @@ class Command(BaseCommand):
                     if estimated_rate == 0:
                         estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
-                hit_assignments = auditable.filter(hit__in = hit_query)
+                hit_assignments = auditable.filter(hit__in = hit_query).distinct()
+                print(hit_assignments)
                 for assignment in hit_assignments:
                     # first check if there is already assignmentaudit for assignmentid
                     if assignment.id in current_audit_assignment_ids:
                         assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
-                        print("assignment audit")
-                        print(assignmentaudit)
+                        # print("assignment audit")
+                        # print(assignmentaudit)
                         if estimated_time != assignmentaudit.estimated_time or estimated_rate != assignmentaudit.estimated_rate:
                             print(estimated_time)
                             print(assignmentaudit.estimated_time)
