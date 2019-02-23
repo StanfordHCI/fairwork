@@ -189,7 +189,7 @@ def load_js(request):
 def iframe(request):
     worker_id = request.GET.get('workerId')
     context = {}
-    if len(worker_id) > 0:
+    if worker_id:
         w, w_created = Worker.objects.get_or_create(id = worker_id)
 
         context = {
