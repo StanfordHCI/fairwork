@@ -188,32 +188,20 @@ def load_js(request):
 @xframe_options_exempt
 def iframe(request):
     worker_id = request.GET.get('workerId')
-    context = {}
+    context = {
+        'DURATION_URL': request.build_absolute_uri('duration'),
+        'IRB_URL': request.build_absolute_uri('toggleirb'),
+        'HOME_URL': request.build_absolute_uri('/'),
+        'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
+        'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
+        'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
+        'IRB_AGREEMENT': "False",
+        'WORKER_IRB': settings.WORKER_IRB_TEMPLATE
+    }
     if worker_id:
         w, w_created = Worker.objects.get_or_create(id = worker_id)
-
-        context = {
-            'DURATION_URL': request.build_absolute_uri('duration'),
-            'IRB_URL': request.build_absolute_uri('toggleirb'),
-            'HOME_URL': request.build_absolute_uri('/'),
-            'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
-            'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
-            'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
-            'IRB_AGREEMENT': w.irb_agreement,
-            'WORKER_IRB': settings.WORKER_IRB_TEMPLATE
-        }
-    else:
-        context = {
-            'DURATION_URL': request.build_absolute_uri('duration'),
-            'IRB_URL': request.build_absolute_uri('toggleirb'),
-            'HOME_URL': request.build_absolute_uri('/'),
-            'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
-            'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
-            'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
-            'IRB_AGREEMENT': "True",
-            'WORKER_IRB': settings.WORKER_IRB_TEMPLATE
-        }
-
+        context['IRB_AGREEMENT'] = w.irb_agreement
+                
     return render(request, 'fairwork.html', context)
 
 def keys(request):
