@@ -57,7 +57,6 @@ class Command(BaseCommand):
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
 
-
         for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
             paid_audits.append(assignmentaudit.assignment_id)
 
@@ -108,13 +107,13 @@ class Command(BaseCommand):
                             assignmentaudit.message_sent = None
                             assignmentaudit.full_clean()
                             assignmentaudit.save()
-                            current_audit_assignment_ids.append(assignment.id)
                     else:
                         audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
                         if not audit.is_underpaid():
                             audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
                         audit.full_clean()
                         audit.save()
+                        current_audit_assignment_ids.append(assignment.id)
 
     def __notify_requesters(self, is_sandbox):
         audits = AssignmentAudit.objects.filter(message_sent = None)
