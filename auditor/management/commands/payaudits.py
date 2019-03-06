@@ -62,7 +62,7 @@ class Command(BaseCommand):
                 # change audits that have status no payment needed to some new status called processed
                 nopaymentneeded = requester_to_bonus.filter(status = AssignmentAudit.NO_PAYMENT_NEEDED)
                 for assignmentaudit in nopaymentneeded:
-                    assignmentaudit.status = PROCESSED
+                    assignmentaudit.status = AssignmentAudit.PROCESSED
                     assignmentaudit.full_clean()
                     assignmentaudit.save()
 
