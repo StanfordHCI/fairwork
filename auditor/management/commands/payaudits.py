@@ -40,12 +40,10 @@ class Command(BaseCommand):
 
             # change audits that have status no payment needed to some new status called processed
             nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.NO_PAYMENT_NEEDED)
-            print(nopaymentneeded)
             for assignmentaudit in nopaymentneeded:
                 assignmentaudit.status = AssignmentAudit.PROCESSED
                 assignmentaudit.full_clean()
                 assignmentaudit.save()
-                print(assignmentaudit)
 
             if is_sandbox:
                 audits = audits.filter(assignment__hit__hit_type__host__contains = 'sandbox')
