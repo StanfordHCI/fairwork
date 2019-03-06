@@ -39,9 +39,9 @@ class Command(BaseCommand):
             audits = AssignmentAudit.objects.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN)).filter(message_sent__lte = grace_period_limit)
 
             # change audits that have status no payment needed to some new status called processed
-            nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.NO_PAYMENT_NEEDED)
+            nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.PROCESSED)
             for assignmentaudit in nopaymentneeded:
-                assignmentaudit.status = AssignmentAudit.PROCESSED
+                assignmentaudit.status = AssignmentAudit.NO_PAYMENT_NEEDED
                 assignmentaudit.full_clean()
                 assignmentaudit.save()
 
