@@ -61,10 +61,12 @@ class Command(BaseCommand):
             
                 # change audits that have status no payment needed to some new status called processed
                 nopaymentneeded = requester_to_bonus.filter(status = AssignmentAudit.NO_PAYMENT_NEEDED)
+                print(nopaymentneeded)
                 for assignmentaudit in nopaymentneeded:
                     assignmentaudit.status = AssignmentAudit.PROCESSED
                     assignmentaudit.full_clean()
                     assignmentaudit.save()
+                    print(assignmentaudit)
 
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
         # How much do we owe them?
