@@ -58,6 +58,13 @@ class Command(BaseCommand):
                 still_unpaid = still_unpaid.all() # refreshes the queryset from the DB, since we just changed payment status of a bunch of items
                 if len(still_unpaid) > 0:
                     self.__notify_insufficient_funds_requester(requester, still_unpaid)
+            
+                # change audits that have status no payment needed to some new status called processed
+                nopaymentneeded = requester_to_bonus.filter(status = AssignmentAudit.NO_PAYMENT_NEEDED)
+                for assignmentaudit in nopaymentneeded:
+                    assignmentaudit.status = PROCESSED
+                    assignmentaudit.full_clean()
+                    assignmentaudit.save()
 
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
         # How much do we owe them?

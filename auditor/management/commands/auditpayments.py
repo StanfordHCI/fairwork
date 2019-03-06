@@ -57,7 +57,7 @@ class Command(BaseCommand):
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.PAID):
+        for assignmentaudit in AssignmentAudit.objects.filter(Q(status=AssignmentAudit.PAID) | Q(status=AssignmentAudit.PROCESSED)):
             paid_audits.append(assignmentaudit.assignment_id)
 
         auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits).distinct()
