@@ -36,7 +36,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Grace period has ended for audits notified before %s' % timezone.localtime(grace_period_limit).strftime("%B %d at %-I:%M%p %Z")))
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
-            audits = AssignmentAudit.objects.filter(closed = False).filter(message_sent__lte = grace_period_limit)
+            audits = AssignmentAudit.objects.filter(closed = False).filter(needsPayment = True).filter(message_sent__lte = grace_period_limit)
 
             # change audits that have status no payment needed to some new status called processed
             # nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.NO_PAYMENT_NEEDED)
@@ -91,6 +91,7 @@ class Command(BaseCommand):
             response = mturk_client.send_bonus(WorkerId = worker.id, BonusAmount = '%.2f' % (total_unpaid), AssignmentId = assignment_to_bonus.assignment.id, Reason = message, UniqueRequestToken = token)
 
             # Once the bonus is sent, mark the audits as paid
+            # Maybe now just turn everything into closed...
             for unpaid_task in assignments_to_bonus:
                 unpaid_task.closed = True
                 unpaid_task.save()
