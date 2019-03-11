@@ -108,9 +108,9 @@ class Command(BaseCommand):
                         assignmentaudit.full_clean()
                         assignmentaudit.save()
                 else:
-                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, closed=False, needsPayment=True)
-                    if not audit.is_underpaid():
-                        audit.needsPayment = False;
+                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate)
+                    if audit.is_underpaid():
+                        audit.needsPayment = True;
                     audit.full_clean()
                     audit.save()
                     current_audit_assignment_ids.append(assignment.id)

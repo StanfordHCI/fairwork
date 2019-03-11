@@ -67,6 +67,10 @@ class Command(BaseCommand):
                 if len(still_unpaid) > 0:
                     self.__notify_insufficient_funds_requester(requester, still_unpaid)
 
+        for audit in AssignmentAudit.objects.filter(closed=False):
+            audit.closed=True
+            audit.save()
+
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
         # How much do we owe them?
         self.stdout.write(self.style.WARNING('Worker: %s' % worker.id))
@@ -92,9 +96,9 @@ class Command(BaseCommand):
 
             # Once the bonus is sent, mark the audits as paid
             # Maybe now just turn everything into closed...
-            for unpaid_task in assignments_to_bonus:
-                unpaid_task.closed = True
-                unpaid_task.save()
+            # for unpaid_task in assignments_to_bonus:
+            #     unpaid_task.closed = True
+            #     unpaid_task.save()
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
                 self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
@@ -102,9 +106,9 @@ class Command(BaseCommand):
             elif e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
                 self.stderr.write(self.style.ERROR("Identical bonus has already been paid on this task. Skipping."))
                 # They already paid it, mark it as done
-                for unpaid_task in assignments_to_bonus:
-                    unpaid_task.closed= True
-                    unpaid_task.save()
+                # for unpaid_task in assignments_to_bonus:
+                #     unpaid_task.closed= True
+                #     unpaid_task.save()
             else:
                 self.stderr.write(self.style.ERROR(e))
 
