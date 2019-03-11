@@ -245,9 +245,9 @@ def freeze(request, requester, worker_signed):
     for status in statuses:
         audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester).filter(message_sent__isnull = False)
         if status == 'pending':
-            audits = audits.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN))
+            audits = audits.filter(needsPayment = True)
         elif status == 'completed':
-            audits = audits.filter(Q(status = AssignmentAudit.PAID) | Q(status = AssignmentAudit.NO_PAYMENT_NEEDED))
+            audits = audits.filter(closed = True)
         else:
             raise Exception("Unknown status: %s" (status))
 
@@ -280,12 +280,12 @@ def freeze(request, requester, worker_signed):
             freeze = RequesterFreeze(worker=worker, requester=requester, reason=form.cleaned_data['reason'])
             freeze.save()
             # set assignment audit as frozen here
-            to_freeze = Assignment.objects.filter(worker=worker)
+            to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
 
-            for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.UNPAID):
+            for assignmentaudit in AssignmentAudit.objects.all():
                 for assignment in to_freeze:
                     if assignment.id == assignmentaudit.assignment_id:
-                        assignmentaudit.status = AssignmentAudit.FROZEN
+                        assignmentaudit.frozen = True
                         assignmentaudit.save()
                         break
 
@@ -314,14 +314,14 @@ def freeze(request, requester, worker_signed):
 
         RequesterFreeze.objects.filter(worker=worker, requester=requester).delete()
 
-        to_unfreeze = Assignment.objects.filter(worker=worker)
+        to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(status=AssignmentAudit.FROZEN):
-                for assignment in to_unfreeze:
-                    if assignment.id == assignmentaudit.assignment_id:
-                        assignmentaudit.status = AssignmentAudit.UNPAID
-                        assignmentaudit.save()
-                        break
+        for assignmentaudit in AssignmentAudit.objects.filter(frozen=True):
+            for assignment in to_unfreeze:
+                if assignment.id == assignmentaudit.assignment_id:
+                    assignmentaudit.frozen = False
+                    assignmentaudit.save()
+                    break
 
         call_command('auditpayments')
         # show banner to requester saying that you unfroze worker

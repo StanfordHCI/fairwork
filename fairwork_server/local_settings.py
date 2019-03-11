@@ -20,3 +20,14 @@ WORKER_IRB_TEMPLATE = 'placeholder-irb-worker.html' # for your IRB agreement
 REQUESTER_IRB_TEMPLATE = 'placeholder-irb-requester.html' # for your IRB agreement
 
 HOSTNAME = 'https://fairwork.yourdomain.com'
+
+# DATABASES = {
+# 	# 'default': {
+#     #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#     #     'NAME': 'd62chgbkskemfl',
+#     #     'USER': 'mvbbtlmsbzmcux',
+#     #     'PASSWORD': '53657128339b3d2cbdb0347b7908fac3375d52053d18d5c4ab2fc92866f3e14b',
+#     #     'HOST': 'ec2-54-235-240-126.compute-1.amazonaws.com',
+#     #     'PORT': '5432',
+#     # }
+# }
