@@ -96,10 +96,10 @@ class AssignmentAudit(models.Model):
     #     (PROCESSED, 'processed')
     # )
     # status = models.CharField(max_length=1, choices=STATUS_CHOICES, default=UNPAID)
-    needsPayment = models.BooleanField()
-    frozen = models.BooleanField()
-    closed = models.BooleanField()
-    
+    needsPayment = models.BooleanField(default = False)
+    frozen = models.BooleanField(default = False)
+    closed = models.BooleanField(default = False)
+
     message_sent = models.DateTimeField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now=True)
 
