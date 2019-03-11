@@ -52,15 +52,15 @@ class Command(BaseCommand):
             frozen_workers.add(freeze_object.worker_id)
 
         current_audit_assignment_ids = []
-        paid_audits = []
+        closed_audits = []
 
         for assignmentaudit in AssignmentAudit.objects.all():
             current_audit_assignment_ids.append(assignmentaudit.assignment_id)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(Q(status=AssignmentAudit.PAID) | Q(status=AssignmentAudit.PROCESSED)):
-            paid_audits.append(assignmentaudit.assignment_id)
+        for assignmentaudit in AssignmentAudit.objects.filter(closed=True):
+            closed_audits.append(assignmentaudit.assignment_id)
 
-        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=paid_audits).distinct()
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=closed_audits).distinct()
 
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
@@ -88,7 +88,6 @@ class Command(BaseCommand):
             # calculate the overall effective time
             if len(hit_durations) == 0:
                 # nobody reported anything
-                status = AssignmentAudit.NO_PAYMENT_NEEDED
                 estimated_time = None
                 estimated_rate = None
             else:
@@ -109,9 +108,9 @@ class Command(BaseCommand):
                         assignmentaudit.full_clean()
                         assignmentaudit.save()
                 else:
-                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
+                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, closed=False, needsPayment=True)
                     if not audit.is_underpaid():
-                        audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
+                        audit.needsPayment = False;
                     audit.full_clean()
                     audit.save()
                     current_audit_assignment_ids.append(assignment.id)

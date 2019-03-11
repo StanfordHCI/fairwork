@@ -36,14 +36,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING('Grace period has ended for audits notified before %s' % timezone.localtime(grace_period_limit).strftime("%B %d at %-I:%M%p %Z")))
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
-            audits = AssignmentAudit.objects.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN)).filter(message_sent__lte = grace_period_limit)
+            audits = AssignmentAudit.objects.filter(closed = False).filter(message_sent__lte = grace_period_limit)
 
             # change audits that have status no payment needed to some new status called processed
-            nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.PROCESSED)
-            for assignmentaudit in nopaymentneeded:
-                assignmentaudit.status = AssignmentAudit.NO_PAYMENT_NEEDED
-                assignmentaudit.full_clean()
-                assignmentaudit.save()
+            # nopaymentneeded = AssignmentAudit.objects.filter(status=AssignmentAudit.NO_PAYMENT_NEEDED)
+            # for assignmentaudit in nopaymentneeded:
+            #     assignmentaudit.status = AssignmentAudit.PROCESSED
+            #     assignmentaudit.full_clean()
+            #     assignmentaudit.save()
 
             if is_sandbox:
                 audits = audits.filter(assignment__hit__hit_type__host__contains = 'sandbox')
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                     self.__bonus_worker(worker, assignments_to_bonus, requester, is_sandbox)
 
                 # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
-                still_unpaid = requester_to_bonus.filter(status = AssignmentAudit.UNPAID)
+                still_unpaid = requester_to_bonus.filter(needsPayment = True)
                 still_unpaid = still_unpaid.all() # refreshes the queryset from the DB, since we just changed payment status of a bunch of items
                 if len(still_unpaid) > 0:
                     self.__notify_insufficient_funds_requester(requester, still_unpaid)
@@ -92,7 +92,7 @@ class Command(BaseCommand):
 
             # Once the bonus is sent, mark the audits as paid
             for unpaid_task in assignments_to_bonus:
-                unpaid_task.status = AssignmentAudit.PAID
+                unpaid_task.closed = True
                 unpaid_task.save()
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
@@ -102,7 +102,7 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR("Identical bonus has already been paid on this task. Skipping."))
                 # They already paid it, mark it as done
                 for unpaid_task in assignments_to_bonus:
-                    unpaid_task.status = AssignmentAudit.PAID
+                    unpaid_task.closed= True
                     unpaid_task.save()
             else:
                 self.stderr.write(self.style.ERROR(e))
