@@ -280,7 +280,7 @@ def freeze(request, requester, worker_signed):
             freeze = RequesterFreeze(worker=worker, requester=requester, reason=form.cleaned_data['reason'])
             freeze.save()
             # set assignment audit as frozen here
-            to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester.id)
+            to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
 
             for assignmentaudit in AssignmentAudit.objects.all():
                 for assignment in to_freeze:
@@ -314,7 +314,7 @@ def freeze(request, requester, worker_signed):
 
         RequesterFreeze.objects.filter(worker=worker, requester=requester).delete()
 
-        to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester.id)
+        to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
 
         for assignmentaudit in AssignmentAudit.objects.filter(frozen=True):
             for assignment in to_unfreeze:
