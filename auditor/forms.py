@@ -15,7 +15,8 @@ class RequesterForm(forms.Form):
             client = boto3.client("sts", aws_access_key_id=self.cleaned_data['key'], aws_secret_access_key=self.cleaned_data['secret'])
             aws_account = client.get_caller_identity()["Account"]
             return aws_account
-        except ClientError:
+        except ClientError as e:
+            print(e)
             return None
 
 
@@ -25,4 +26,5 @@ class RequesterForm(forms.Form):
 
 
 class FreezeForm(forms.Form):
-    reason = forms.CharField(widget=forms.Textarea, label='Reason for freezing payments')
+    reason = forms.CharField(widget=forms.Textarea(attrs={"style": "margin: 0px; width: 560px; height: 200px;"}), label='Reason for freezing payments')
+
