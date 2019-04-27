@@ -173,7 +173,7 @@ STATICFILES_DIRS = (
 
 MTURK_SANDBOX_ENDPOINT = 'https://mturk-requester-sandbox.us-east-1.amazonaws.com'
 MTURK_ENDPOINT = 'https://mturk-requester.us-east-1.amazonaws.com'
-MINIMUM_WAGE_PER_HOUR = Decimal(11.00) # CA minimum wage 2018
+MINIMUM_WAGE_PER_HOUR = Decimal(15.00) # Based on our minimum wage analysis in the US and surveying MTurk workers
 
 # Change these settings in your local settings file
 WORKER_IRB_TEMPLATE = 'stanford-irb-worker.html'
