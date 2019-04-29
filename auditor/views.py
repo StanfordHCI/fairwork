@@ -23,10 +23,15 @@ from collections import defaultdict
 import boto3
 from statistics import median
 
+from django.conf import settings
+
 @csrf_exempt
 @xframe_options_exempt
 def index(request):
-    return render(request, 'index.html')
+    context = {
+        'MIN_WAGE': settings.MINIMUM_WAGE_PER_HOUR
+    }
+    return render(request, 'index.html', context)
 
 @csrf_exempt
 def create_hit(request):
