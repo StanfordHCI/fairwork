@@ -23,8 +23,6 @@ from collections import defaultdict
 import boto3
 from statistics import median
 
-from django.conf import settings
-
 @csrf_exempt
 @xframe_options_exempt
 def index(request):
@@ -201,7 +199,8 @@ def iframe(request):
         'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
         'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
         'IRB_AGREEMENT': "False",
-        'WORKER_IRB': settings.WORKER_IRB_TEMPLATE
+        'WORKER_IRB': settings.WORKER_IRB_TEMPLATE,
+        'MIN_WAGE': settings.MINIMUM_WAGE_PER_HOUR
     }
     if worker_id:
         w, w_created = Worker.objects.get_or_create(id = worker_id)
