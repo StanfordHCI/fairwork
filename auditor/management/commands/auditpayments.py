@@ -68,7 +68,7 @@ class Command(BaseCommand):
             hit_durations = list()
 
             for hit in hit_query:
-                req_id = HITType.objects.get(HIT.objects.get(hit).hit_type_id).requester_id
+                req_id = HITType.objects.get(pk = HIT.objects.get(pk = hit).hit_type_id).requester_id
                 frozen_workers = set(())
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
