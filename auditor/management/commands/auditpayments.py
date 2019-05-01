@@ -76,6 +76,7 @@ class Command(BaseCommand):
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
+                    print(duration_query.values_list('duration', flat=True))
                     median_duration = median(duration_query.values_list('duration', flat=True))
                     hit_durations.append(median_duration)
 
