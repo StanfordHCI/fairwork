@@ -89,6 +89,7 @@ class Command(BaseCommand):
                 estimated_rate = None
             else:
                 estimated_time = median(hit_durations)
+                print(estimated_time)
                 estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
@@ -193,6 +194,7 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
         s = "<li>" if is_html else ""
 
         underpayment = hittype_assignments[0].get_underpayment()
+        print(hittype_assignments[0].estimated_time)
         time_nomicroseconds = str(hittype_assignments[0].estimated_time).split(".")[0]
         if underpayment is None:
             summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. No workers reported time elapsed for this HIT, so effective rate cannot be estimated. No bonuses will be sent.".format(hittype = hit_type.id, payment = hit_type.payment)
