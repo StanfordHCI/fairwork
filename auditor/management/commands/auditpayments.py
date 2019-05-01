@@ -43,11 +43,6 @@ class Command(BaseCommand):
     def __audit_hits(self, is_sandbox):
         # Gets all assignments that have been accepted but don't have an audit yet
 
-        frozen_workers = set(())
-
-        for freeze_object in RequesterFreeze.objects.all():
-            frozen_workers.add(freeze_object.worker_id)
-
         current_audit_assignment_ids = []
         closed_audits = []
 
@@ -71,7 +66,12 @@ class Command(BaseCommand):
             hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable).distinct()
 
             hit_durations = list()
+
             for hit in hit_query:
+                req_id = HITType.objects.get(HIT.objects.get(hit).hit_type_id).requester_id
+                frozen_workers = set(())
+                for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
+                    frozen_workers.add(freeze_object.worker_id)
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
 
                 # Take the median report for all assignments in that HIT
