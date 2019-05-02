@@ -27,7 +27,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.__pay_audited_hits()
 
-
     ###
     ### Pay the HITs that need to be paid
     ###
@@ -62,14 +61,10 @@ class Command(BaseCommand):
                     self.__bonus_worker(worker, assignments_to_bonus, requester, is_sandbox)
 
                 # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
-                still_unpaid = requester_to_bonus.filter(needsPayment = True)
+                still_unpaid = requester_to_bonus.filter(needsPayment = True).filter(frozen = False)
                 still_unpaid = still_unpaid.all() # refreshes the queryset from the DB, since we just changed payment status of a bunch of items
                 if len(still_unpaid) > 0:
                     self.__notify_insufficient_funds_requester(requester, still_unpaid)
-
-        for audit in AssignmentAudit.objects.filter(closed=False):
-            audit.closed=True
-            audit.save()
 
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
         # How much do we owe them?
@@ -96,9 +91,10 @@ class Command(BaseCommand):
 
             # Once the bonus is sent, mark the audits as paid
             # Maybe now just turn everything into closed...
-            # for unpaid_task in assignments_to_bonus:
-            #     unpaid_task.closed = True
-            #     unpaid_task.save()
+            for unpaid_task in assignments_to_bonus:
+                unpaid_task.closed = True
+                unpaid_task.needsPayment = False
+                unpaid_task.save()
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
                 self.stderr.write(self.style.ERROR("Requester does not have enough funds. Notifying worker."))
@@ -106,9 +102,10 @@ class Command(BaseCommand):
             elif e.response['Error']['Message'].startswith("The idempotency token"): # has already been processed
                 self.stderr.write(self.style.ERROR("Identical bonus has already been paid on this task. Skipping."))
                 # They already paid it, mark it as done
-                # for unpaid_task in assignments_to_bonus:
-                #     unpaid_task.closed= True
-                #     unpaid_task.save()
+                for unpaid_task in assignments_to_bonus:
+                    unpaid_task.closed= True
+                    unpaid_task.needsPayment = False
+                    unpaid_task.save()
             else:
                 self.stderr.write(self.style.ERROR(e))
 
@@ -121,7 +118,7 @@ class Command(BaseCommand):
         subject = "Fair Work bonus of $%.2f pending, but requester out of funds — please notify requester" % total_unpaid
 
         message = """This is an automated message from the Fair Work script: this requester is trying to bonus you, but they don't have enough funds in their account to send the bonus. Please reply and let them know that they need to deposit more funds.
-This requester is using the Fair Work script to ensure pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr. The total bonus will be $%.2f.
+This requester is using the Fair Work script to ensure pay rates reach a minimum wage of $%.2f/hr. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid. We are bonusing you to bring you back up to $%.2f/hr. The total bonus will be $%.2f.
 We will try to send the bonus again periodically, so you will get paid after they deposit more funds.
         """ % (settings.MINIMUM_WAGE_PER_HOUR, settings.MINIMUM_WAGE_PER_HOUR, total_unpaid)
 
@@ -142,7 +139,7 @@ We will try to send the bonus again periodically, so you will get paid after the
         total_deposit = total_underpaid * Decimal('1.20') # AMT bonus fee rate
         subject = "Error: Fair Work bonuses are pending but you are out of funds. Please deposit $%.2f." % total_deposit
         message = """This is an automated message from the Fair Work script: you have underpaid workers and need to bonus them, but you don't have enough funds in your account to send the bonus. You need to send bonuses totaling $%.2f, but with Mechanical Turk's fee, you need to deposit $%.2f to have enough funds to send those bonuses. Please deposit more funds, and we will automatically retry in roughly 24 hours.
-We are sending you this note because you are using the Fair Work script to ensure Mechanical Turk pay rates reach a minimum wage of $%.2f/hr, as described in the Turker-authored We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid.
+We are sending you this note because you are using the Fair Work script to ensure Mechanical Turk pay rates reach a minimum wage of $%.2f/hr. Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage. Based on worker time reports, your tasks have been underpaid.
         """ % (total_underpaid, total_deposit, settings.MINIMUM_WAGE_PER_HOUR)
 
         send_mail(subject, message, auditpayments.admin_email_address(), [requester.email], fail_silently=False)
