@@ -32,9 +32,19 @@ class Command(BaseCommand):
     ###
     def __pay_audited_hits(self):
         grace_period_limit = timezone.now() - auditpayments.REQUESTER_GRACE_PERIOD
+        print("requester grace period")
+        print(auditpayments.REQUESTER_GRACE_PERIOD)
+        print("grace period limit")
+        print(grace_period_limit)
+        
         self.stdout.write(self.style.WARNING('Grace period has ended for audits notified before %s' % timezone.localtime(grace_period_limit).strftime("%B %d at %-I:%M%p %Z")))
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
+
+            testaudits = AssignmentAudit.objects.filter(closed = False).filter(needsPayment = True)
+            print("testaudits")
+            print(testaudits)
+
             audits = AssignmentAudit.objects.filter(closed = False).filter(needsPayment = True).filter(message_sent__lte = grace_period_limit)
 
             if is_sandbox:
