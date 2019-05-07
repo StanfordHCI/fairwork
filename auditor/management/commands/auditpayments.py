@@ -76,7 +76,6 @@ class Command(BaseCommand):
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
-                    print(duration_query.values_list('duration', flat=True))
                     median_duration = median(duration_query.values_list('duration', flat=True))
                     hit_durations.append(median_duration)
 
@@ -90,7 +89,6 @@ class Command(BaseCommand):
                 estimated_rate = None
             else:
                 estimated_time = median(hit_durations)
-                print(estimated_time)
                 estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
@@ -187,15 +185,12 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
     for hit_type in hit_types:
         hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
-        # print("hit type assignments")
-        # print(hittype_assignments)
         hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
         workers = Worker.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
 
         s = "<li>" if is_html else ""
 
         underpayment = hittype_assignments[0].get_underpayment()
-        print(hittype_assignments[0].estimated_time)
         time_nomicroseconds = str(hittype_assignments[0].estimated_time).split(".")[0]
         if underpayment is None:
             summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. No workers reported time elapsed for this HIT, so effective rate cannot be estimated. No bonuses will be sent.".format(hittype = hit_type.id, payment = hit_type.payment)
@@ -212,10 +207,6 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
-            # print("duration query")
-            # print(duration_query)
-            # find the worker's median report for this HITType
-            # uh oh sometimes duration query is empty now...
             if len(duration_query) > 0:
                 median_duration = median(duration_query.values_list('duration', flat=True))
                 median_nomicroseconds = str(median_duration).split(".")[0]
