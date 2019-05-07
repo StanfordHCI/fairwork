@@ -42,6 +42,9 @@ class Command(BaseCommand):
             else:
                 audits = audits.exclude(assignment__hit__hit_type__host__contains = 'sandbox')
 
+            print("audits")
+            print(audits)
+
             requesters = Requester.objects.filter(hittype__hit__assignment__assignmentaudit__in = audits).distinct()
             print("requesters")
             print(requesters)
