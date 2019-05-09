@@ -167,8 +167,7 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
     else:
         message += "You are "
     message += "using the <a href='%s'>Fair Work script</a> " % settings.HOSTNAME if is_html else "using the Fair Work script (%s) " % settings.HOSTNAME
-    message += "to ensure pay rates reach a minimum wage of $%.2f/hr. The goal of fair pay is outlined in the Turker-authored " % (settings.MINIMUM_WAGE_PER_HOUR)
-    message += "<a href='http://guidelines.wearedynamo.org/'>We Are Dynamo guidelines</a>. " if is_html else "We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. "
+    message += "to ensure pay rates reach a minimum wage of $%.2f/hr." % (settings.MINIMUM_WAGE_PER_HOUR)
     message += "Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage of $%.2f/hr." % (settings.MINIMUM_WAGE_PER_HOUR)
     message += "</p>" if is_html else "\n\n"
 
@@ -205,13 +204,19 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
         s += summary
         s += "<ul>" if is_html else "\n"
 
+        anon_worker_id = 1
+
         for worker in workers:
             duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
             if len(duration_query) > 0:
                 median_duration = median(duration_query.values_list('duration', flat=True))
                 median_nomicroseconds = str(median_duration).split(".")[0]
                 s += "<li>" if is_html else "\t"
-                s += "Worker %s: " % worker.id
+                if !is_worker:
+                    s += "Worker %s: " % worker.id
+                else:
+                    s += "Worker " + str(anon_worker_id)
+                    anon_worker_id += 1
                 s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
                 if not is_worker:
                     worker_signed = signer.sign(worker.id)
