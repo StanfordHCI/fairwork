@@ -55,7 +55,7 @@ class Command(BaseCommand):
 
                 workers = Worker.objects.filter(assignment__assignmentaudit__in = requester_to_bonus).distinct()
                 for worker in workers:
-                    assignments_to_bonus = requester_to_bonus.filter(assignment__worker = worker).distinct()
+                    assignments_to_bonus = requester_to_bonus.filter(assignment__worker__in = workers).distinct()
                     self.__bonus_worker(worker, assignments_to_bonus, requester, is_sandbox)
 
                 # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
@@ -65,7 +65,6 @@ class Command(BaseCommand):
                     self.__notify_insufficient_funds_requester(requester, still_unpaid)
 
     def __bonus_worker(self, worker, assignments_to_bonus, requester, is_sandbox):
-        # How much do we owe them?
         self.stdout.write(self.style.WARNING('Worker: %s' % worker.id))
         total_unpaid = auditpayments.get_underpayment(assignments_to_bonus)
 
