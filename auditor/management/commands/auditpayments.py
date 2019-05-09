@@ -212,11 +212,11 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
                 median_duration = median(duration_query.values_list('duration', flat=True))
                 median_nomicroseconds = str(median_duration).split(".")[0]
                 s += "<li>" if is_html else "\t"
-                if !is_worker:
-                    s += "Worker %s: " % worker.id
-                else:
+                if is_worker:
                     s += "Worker " + str(anon_worker_id)
                     anon_worker_id += 1
+                else:
+                    s += "Worker %s: " % worker.id
                 s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
                 if not is_worker:
                     worker_signed = signer.sign(worker.id)
