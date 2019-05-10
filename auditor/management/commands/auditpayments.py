@@ -199,35 +199,38 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
             paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
             bonus = underpayment.quantize(Decimal('1.000')).normalize() if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000'))
             paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
-
-            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignment{assignment_plural:s} in {num_hits:d} HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), assignment_plural=pluralize(len(hittype_assignments)), num_hits=len(hits), hits_plural=pluralize(len(hits)), num_workers=len(workers), workers_plural=pluralize(len(workers)), paymentrevised = paymentrevised, totalbonus = get_underpayment(hittype_assignments))
+            if is_worker:
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each assignment in HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, hits_plural=pluralize(len(hits)), paymentrevised = paymentrevised)
+            else: 
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignment{assignment_plural:s} in {num_hits:d} HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), assignment_plural=pluralize(len(hittype_assignments)), num_hits=len(hits), hits_plural=pluralize(len(hits)), num_workers=len(workers), workers_plural=pluralize(len(workers)), paymentrevised = paymentrevised, totalbonus = get_underpayment(hittype_assignments))
         s += summary
         s += "<ul>" if is_html else "\n"
 
-        anon_worker_id = 1
+        # anon_worker_id = 1
 
-        for worker in workers:
-            duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
-            if len(duration_query) > 0:
-                median_duration = median(duration_query.values_list('duration', flat=True))
-                median_nomicroseconds = str(median_duration).split(".")[0]
-                s += "<li>" if is_html else "\t"
-                if is_worker:
-                    s += "Worker " + str(anon_worker_id)
-                    anon_worker_id += 1
-                else:
+        if not is_worker:
+            for worker in workers:
+                duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
+                if len(duration_query) > 0:
+                    median_duration = median(duration_query.values_list('duration', flat=True))
+                    median_nomicroseconds = str(median_duration).split(".")[0]
+                    s += "<li>" if is_html else "\t"
+                    # if is_worker:
+                    #     s += "Worker " + str(anon_worker_id) + ": "
+                    #     anon_worker_id += 1
+                    # else:
                     s += "Worker %s: " % worker.id
-                s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
-                if not is_worker:
-                    worker_signed = signer.sign(worker.id)
-                    freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
+                    s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
+                    if not is_worker:
+                        worker_signed = signer.sign(worker.id)
+                        freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
 
-                    if is_html:
-                        s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
-                    else:
-                        s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
-                s += "</li>" if is_html else "\n"
-            # maybe else say something like this worker is probably frozen
+                        if is_html:
+                            s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
+                        else:
+                            s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
+                    s += "</li>" if is_html else "\n"
+                # maybe else say something like this worker is probably frozen
 
         s += "</li>" if is_html else "\n\n"
         message += s
