@@ -4,6 +4,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.conf import settings
 from django.core.signing import Signer
+from django.core.management import call_command
 from django.template import loader
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
@@ -13,7 +14,9 @@ from django.db.models import Q
 from .models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester, RequesterFreeze
 from .forms import RequesterForm, FreezeForm
 from auditor.management.commands.pullnotifications import get_mturk_connection
-from auditor.management.commands.auditpayments import get_salt
+# from auditor.management.commands.auditpayments import get_salt
+from auditor.management.commands import auditpayments
+
 
 from datetime import timedelta
 from collections import defaultdict
@@ -23,7 +26,10 @@ from statistics import median
 @csrf_exempt
 @xframe_options_exempt
 def index(request):
-    return render(request, 'index.html')
+    context = {
+        'MIN_WAGE': settings.MINIMUM_WAGE_PER_HOUR
+    }
+    return render(request, 'index.html', context)
 
 @csrf_exempt
 def create_hit(request):
@@ -120,17 +126,26 @@ def assignment_duration(request):
     else:
         r = hit_type.requester
 
-    minutes = float(__get_POST_param(request, 'duration'))
-    duration = timedelta(minutes=minutes)
+    strTime = __get_POST_param(request, 'duration')
+    if (strTime == ""):
+        AssignmentDuration.objects.filter(assignment=assignment).delete()
 
-    at, created = AssignmentDuration.objects.update_or_create(
-        assignment = assignment,
-        defaults = {
-            'duration': duration
-        }
-    )
+        return HttpResponse("Deleted duration for %s" % (assignment))        
+    else:
+        try:
+            minutes = float(strTime)
+            duration = timedelta(minutes=minutes)
 
-    return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
+            at, created = AssignmentDuration.objects.update_or_create(
+                assignment = assignment,
+                defaults = {
+                    'duration': duration
+                }
+            )
+
+            return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
+        except ValueError:
+            return HttpResponse("Not a valid input")
 
 @csrf_exempt
 def irb_agreement(request):
@@ -176,8 +191,6 @@ def load_js(request):
 @xframe_options_exempt
 def iframe(request):
     worker_id = request.GET.get('workerId')
-    w = Worker.objects.get(id = worker_id)
-
     context = {
         'DURATION_URL': request.build_absolute_uri('duration'),
         'IRB_URL': request.build_absolute_uri('toggleirb'),
@@ -185,10 +198,14 @@ def iframe(request):
         'CREATE_HIT_URL': request.build_absolute_uri('createhit'),
         'MOST_RECENT_REPORT_URL': request.build_absolute_uri('mostrecent'),
         'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
-        'IRB_AGREEMENT': w.irb_agreement,
-        'WORKER_IRB': settings.WORKER_IRB_TEMPLATE
+        'IRB_AGREEMENT': "False",
+        'WORKER_IRB': settings.WORKER_IRB_TEMPLATE,
+        'MIN_WAGE': settings.MINIMUM_WAGE_PER_HOUR
     }
-
+    if worker_id:
+        w, w_created = Worker.objects.get_or_create(id = worker_id)
+        context['IRB_AGREEMENT'] = w.irb_agreement
+                
     return render(request, 'fairwork.html', context)
 
 def keys(request):
@@ -209,7 +226,10 @@ def keys(request):
     return render(request, 'keys.html', context)
 
 def update_keys(key, secret, email, aws_account):
-    __create_or_update_requester(aws_account, key, secret, email)
+    try:
+        __create_or_update_requester(aws_account, key, secret, email)
+    except Exception as e:
+        print(e)
 
 def script(request):
     aws_account = request.GET.get('aws_account')
@@ -218,8 +238,8 @@ def script(request):
     return render(request, 'script.html', context)
 
 def freeze(request, requester, worker_signed):
-    signer = Signer(salt=get_salt())
-    requester = Requester.objects.get(aws_account = requester)
+    signer = Signer(salt=auditpayments.get_salt())
+    requester_object = Requester.objects.get(aws_account = requester)
     worker_id = signer.unsign(worker_signed)
     worker = Worker.objects.get(id = worker_id)
 
@@ -227,11 +247,11 @@ def freeze(request, requester, worker_signed):
     status_durations = dict()
 
     for status in statuses:
-        audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester).filter(message_sent__isnull = False)
+        audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester_object).filter(message_sent__isnull = False)
         if status == 'pending':
-            audits = audits.filter(Q(status = AssignmentAudit.UNPAID) | Q(status = AssignmentAudit.FROZEN))
+            audits = audits.filter(closed=False).filter(needsPayment=True)
         elif status == 'completed':
-            audits = audits.filter(Q(status = AssignmentAudit.PAID) | Q(status = AssignmentAudit.NO_PAYMENT_NEEDED))
+            audits = audits.filter(closed = True).filter(needsPayment=True)
         else:
             raise Exception("Unknown status: %s" (status))
 
@@ -249,20 +269,73 @@ def freeze(request, requester, worker_signed):
 
             # Now find the median per worker
             worker_median_durations = dict()
-            for worker in worker_durations.keys():
-                worker_median_durations[worker] = median(worker_durations[worker])
+            for some_worker in worker_durations.keys():
+                worker_median_durations[worker] = median(worker_durations[some_worker])
             hittype_durations[hit_type] = worker_median_durations
 
         status_durations[status] = hittype_durations
 
     # if this is a POST request we need to process the freeze form data
-    if request.method == 'POST':
+    if request.method == 'POST' and 'create' in request.POST.keys():
         # create a form instance and populate it with data from the request:
         form = FreezeForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
-            freeze = RequesterFreeze(worker=worker, requester=requester, reason=form.cleaned_data['reason'])
+            freeze = RequesterFreeze(worker=worker, requester=requester_object, reason=form.cleaned_data['reason'])
             freeze.save()
+            # set assignment audit as frozen here
+            to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester_object)
+
+            for assignmentaudit in AssignmentAudit.objects.filter(closed=False):
+                for assignment in to_freeze:
+                    if assignment.id == assignmentaudit.assignment_id:
+                        assignmentaudit.frozen = True
+                        assignmentaudit.save()
+                        break
+
+            # show banner to requester saying that you froze worker
+            # send email to worker saying you're frozen
+            # need to get some sort of Mturk object...
+
+            mturk_clients = get_mturk_connection(requester_object, dict())
+
+            for is_sandbox in [True, False]:
+                if is_sandbox:
+                    mturk_client = mturk_clients['sandbox']
+                else:
+                    mturk_client = mturk_clients['production']
+
+                try:
+                    subject = "Fair Work Payments Frozen"
+                    message = "A requester has frozen your Fair Work bonus payments. The requester gave the following reason for freezing your bonus payments: \n\n"
+                    message += "\"" + form.cleaned_data['reason'] + "\"" + "\n\n"
+                    message += "We ask requesters to only freeze payments if there is a major issue. If this freeze was done in error, please first try to contact the requester at " + str(requester_object.email) + ". If the requester is not responding or is responding in bad faith, our email is " + settings.ADMIN_EMAIL + "."
+                    # If a requester is being unreasonable please email 
+                    mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
+
+                except mturk_client.exceptions.RequestError as e:
+                    print(e)
+
+            call_command('auditpayments')
+
+    elif request.method == 'POST' and 'delete' in request.POST.keys():
+        form = FreezeForm()
+
+        RequesterFreeze.objects.filter(worker=worker, requester=requester_object).delete()
+
+        to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester_object)
+
+        for assignmentaudit in AssignmentAudit.objects.filter(closed=False).filter(frozen=True):
+            for assignment in to_unfreeze:
+                if assignment.id == assignmentaudit.assignment_id:
+                    assignmentaudit.frozen = False
+                    assignmentaudit.save()
+                    break
+
+        call_command('auditpayments')
+        # show banner to requester saying that you unfroze worker
+        # send email to worker saying you're unfrozen
+
     else:
         form = FreezeForm()
 

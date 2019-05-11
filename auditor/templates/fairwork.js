@@ -44,9 +44,8 @@
   document.addEventListener("DOMContentLoaded", function(event) {
 
     var assignment_id = getUrlParameter("assignmentId");
-    if (assignment_id == 'ASSIGNMENT_ID_NOT_AVAILABLE') {
-      // preview mode
-      return;
+    if (assignment_id == null) {
+      assignment_id = 'ASSIGNMENT_ID_NOT_AVAILABLE'
     }
     var worker_id = getUrlParameter("workerId");
     var hit_id = getUrlParameter("hitId");

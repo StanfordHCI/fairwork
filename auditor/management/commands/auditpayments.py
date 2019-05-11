@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from django.db.models import Avg, Sum, F
+from django.db.models import Avg, Sum, F, Q
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.template.defaultfilters import pluralize
@@ -17,17 +17,14 @@ from datetime import timedelta
 
 import boto3
 
-from auditor.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester
+from auditor.models import HITType, HIT, Worker, Assignment, AssignmentDuration, AssignmentAudit, Requester, RequesterFreeze
 from auditor.management.commands.pullnotifications import get_mturk_connection
 
 """
 Performs the payment audit on the task. Pseudocode:
 - Get accepted assignments that don't have an audit yet. Relies on pullnotifications.py having processed accepted HITs.
-
 - Map from assignments to HITs, and get all HITs in that HITGroup that need auditing. Calculate effective rate for each assignment, then median those to get effective rate for each HIT. Take median across all HITs in the HITGroup that were accepted but not audited yet to determine effective rate for the group under consideration. (Could do this by HIT, but too much variation. Could also do across all HITs in the HITGroup, but if the requester improved the HIT, it will still remember all the old low payments and not reflect the new design, which seems bad.) If effective rate >= min rate, then mark it as OK. Otherwise...
-
 - Group unaudited assignemnts by worker_id. calculate num_assignments_accepted * (min_rate - estimated_rate) to figure out bonus amount
-
 - Bonus worker on first assignment in the HITGroup (to avoid being spammy) and keep a record
 """
 
@@ -45,24 +42,37 @@ class Command(BaseCommand):
 
     def __audit_hits(self, is_sandbox):
         # Gets all assignments that have been accepted but don't have an audit yet
-        auditable = Assignment.objects.filter(status=Assignment.APPROVED).filter(assignmentaudit__isnull
-    =True)
+
+        current_audit_assignment_ids = []
+        closed_audits = []
+
+        for assignmentaudit in AssignmentAudit.objects.all():
+            current_audit_assignment_ids.append(assignmentaudit.assignment_id)
+
+        for assignmentaudit in AssignmentAudit.objects.filter(closed=True):
+            closed_audits.append(assignmentaudit.assignment_id)
+
+        auditable = Assignment.objects.filter(status=Assignment.APPROVED).exclude(id__in=closed_audits).distinct()
+
         if is_sandbox:
             auditable = auditable.filter(hit__hit_type__host__contains = 'sandbox')
         else:
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
 
-
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
+
         for hit_type in hit_type_query:
-
             # Get the HITs that need auditing
-            hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable)
-
+            hit_query = HIT.objects.filter(hit_type=hit_type).filter(assignment__in = auditable).distinct()
 
             hit_durations = list()
+
             for hit in hit_query:
-                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit)
+                req_id = HITType.objects.get(pk = HIT.objects.get(pk = hit).hit_type_id).requester_id
+                frozen_workers = set(())
+                for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
+                    frozen_workers.add(freeze_object.worker_id)
+                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
@@ -75,7 +85,6 @@ class Command(BaseCommand):
             # calculate the overall effective time
             if len(hit_durations) == 0:
                 # nobody reported anything
-                status = AssignmentAudit.NO_PAYMENT_NEEDED
                 estimated_time = None
                 estimated_rate = None
             else:
@@ -84,15 +93,24 @@ class Command(BaseCommand):
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
-            hit_assignments = auditable.filter(hit__in = hit_query)
+            hit_assignments = auditable.filter(hit__in = hit_query).distinct()
             for assignment in hit_assignments:
-                audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate, status = AssignmentAudit.UNPAID)
-                if not audit.is_underpaid():
-                    audit.status = AssignmentAudit.NO_PAYMENT_NEEDED
-                audit.full_clean()
-                audit.save()
-
-
+                # first check if there is already assignmentaudit for assignmentid
+                if assignment.id in current_audit_assignment_ids:
+                    assignmentaudit = AssignmentAudit.objects.get(assignment_id = assignment.id)
+                    if estimated_time != assignmentaudit.estimated_time or estimated_rate != assignmentaudit.estimated_rate:
+                        assignmentaudit.estimated_time = estimated_time
+                        assignmentaudit.estimated_rate = estimated_rate
+                        assignmentaudit.message_sent = None
+                        assignmentaudit.full_clean()
+                        assignmentaudit.save()
+                else:
+                    audit = AssignmentAudit(assignment = assignment, estimated_time = estimated_time, estimated_rate = estimated_rate)
+                    if audit.is_underpaid():
+                        audit.needsPayment = True;
+                    audit.full_clean()
+                    audit.save()
+                    current_audit_assignment_ids.append(assignment.id)
 
     def __notify_requesters(self, is_sandbox):
         audits = AssignmentAudit.objects.filter(message_sent = None)
@@ -103,6 +121,7 @@ class Command(BaseCommand):
 
 
         requesters = Requester.objects.filter(hittype__hit__assignment__assignmentaudit__in = audits).distinct()
+
         for requester in requesters:
             requester_audit = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
             self.__notify_requester(requester, requester_audit, is_sandbox)
@@ -148,8 +167,7 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
     else:
         message += "You are "
     message += "using the <a href='%s'>Fair Work script</a> " % settings.HOSTNAME if is_html else "using the Fair Work script (%s) " % settings.HOSTNAME
-    message += "to ensure pay rates reach a minimum wage of $%.2f/hr. The goal of fair pay is outlined in the Turker-authored " % (settings.MINIMUM_WAGE_PER_HOUR)
-    message += "<a href='http://guidelines.wearedynamo.org/'>We Are Dynamo guidelines</a>. " if is_html else "We Are Dynamo guidelines: http://guidelines.wearedynamo.org/. "
+    message += "to ensure pay rates reach a minimum wage of $%.2f/hr. " % (settings.MINIMUM_WAGE_PER_HOUR)
     message += "Fair Work does this by asking for completion times and then auto-bonusing workers to meet the desired hourly wage of $%.2f/hr." % (settings.MINIMUM_WAGE_PER_HOUR)
     message += "</p>" if is_html else "\n\n"
 
@@ -163,6 +181,7 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
     message += "</p><ul>" if is_html else "\n\n"
 
     hit_types = HITType.objects.filter(hit__assignment__assignmentaudit__in = assignments_to_bonus).distinct()
+
     for hit_type in hit_types:
         hittype_assignments = assignments_to_bonus.filter(assignment__hit__hit_type = hit_type)
         hits = HIT.objects.filter(assignment__assignmentaudit__in = hittype_assignments).distinct()
@@ -180,33 +199,48 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
             paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
             bonus = underpayment.quantize(Decimal('1.000')).normalize() if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000'))
             paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
-
-            summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignment{assignment_plural:s} in {num_hits:d} HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), assignment_plural=pluralize(len(hittype_assignments)), num_hits=len(hits), hits_plural=pluralize(len(hits)), num_workers=len(workers), workers_plural=pluralize(len(workers)), paymentrevised = paymentrevised, totalbonus = get_underpayment(hittype_assignments))
+            if is_worker:
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each assignment in HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, hits_plural=pluralize(len(hits)), paymentrevised = paymentrevised)
+            else: 
+                summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. Bonus ${bonus:f} for each of {num_assignments:d} assignment{assignment_plural:s} in {num_hits:d} HIT{hits_plural:s} to bring the payment to a suggested ${paymentrevised:f} each. Total: ${totalbonus:.2f} bonus.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, bonus = bonus, num_assignments = len(hittype_assignments), assignment_plural=pluralize(len(hittype_assignments)), num_hits=len(hits), hits_plural=pluralize(len(hits)), num_workers=len(workers), workers_plural=pluralize(len(workers)), paymentrevised = paymentrevised, totalbonus = get_underpayment(hittype_assignments))
         s += summary
         s += "<ul>" if is_html else "\n"
 
-        for worker in workers:
-            duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
+        # anon_worker_id = 1
 
-            # find the worker's median report for this HITType
-            median_duration = median(duration_query.values_list('duration', flat=True))
-            median_nomicroseconds = str(median_duration).split(".")[0]
-            s += "<li>" if is_html else "\t"
-            s += "Worker %s: " % worker.id
-            s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
-            if not is_worker:
-                worker_signed = signer.sign(worker.id)
-                freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
+        if not is_worker:
+            for worker in workers:
+                duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
+                if len(duration_query) > 0:
+                    median_duration = median(duration_query.values_list('duration', flat=True))
+                    median_nomicroseconds = str(median_duration).split(".")[0]
+                    s += "<li>" if is_html else "\t"
+                    # if is_worker:
+                    #     s += "Worker " + str(anon_worker_id) + ": "
+                    #     anon_worker_id += 1
+                    # else:
+                    s += "Worker %s: " % worker.id
+                    s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
+                    if not is_worker:
+                        worker_signed = signer.sign(worker.id)
+                        freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
 
-                if is_html:
-                    s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
-                else:
-                    s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
-            s += "</li>" if is_html else "\n"
+                        if is_html:
+                            s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
+                        else:
+                            s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
+                    s += "</li>" if is_html else "\n"
+                # maybe else say something like this worker is probably frozen
 
         s += "</li>" if is_html else "\n\n"
         message += s
     return message
+
+def is_worker_frozen(worker):
+    for freeze_object in RequesterFreeze.objects.all():
+        if freeze_object.worker == worker:
+            return True;
+    return False;
 
 def get_underpayment(assignments_to_bonus):
     total_unpaid = Decimal('0.00')
@@ -223,3 +257,4 @@ def admin_email_address():
 
 def get_salt():
     return 'WORKER FREEZE'
+    
