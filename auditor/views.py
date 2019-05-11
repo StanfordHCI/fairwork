@@ -237,9 +237,9 @@ def script(request):
 
     return render(request, 'script.html', context)
 
-def freeze(request, requester_aws, worker_signed):
+def freeze(request, requester, worker_signed):
     signer = Signer(salt=auditpayments.get_salt())
-    requester = Requester.objects.get(aws_account = requester_aws)
+    requester_object = Requester.objects.get(aws_account = requester)
     worker_id = signer.unsign(worker_signed)
     worker = Worker.objects.get(id = worker_id)
 
@@ -247,7 +247,7 @@ def freeze(request, requester_aws, worker_signed):
     status_durations = dict()
 
     for status in statuses:
-        audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester).filter(message_sent__isnull = False)
+        audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester_object).filter(message_sent__isnull = False)
         if status == 'pending':
             audits = audits.filter(needsPayment = True)
         elif status == 'completed':
@@ -281,10 +281,10 @@ def freeze(request, requester_aws, worker_signed):
         form = FreezeForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
-            freeze = RequesterFreeze(worker=worker, requester=requester, reason=form.cleaned_data['reason'])
+            freeze = RequesterFreeze(worker=worker, requester=requester_object, reason=form.cleaned_data['reason'])
             freeze.save()
             # set assignment audit as frozen here
-            to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
+            to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester_object)
 
             for assignmentaudit in AssignmentAudit.objects.filter(closed=False):
                 for assignment in to_freeze:
@@ -297,7 +297,8 @@ def freeze(request, requester_aws, worker_signed):
             # send email to worker saying you're frozen
             # need to get some sort of Mturk object...
             print(requester)
-            mturk_clients = get_mturk_connection(requester, dict())
+            print(requester_object)
+            mturk_clients = get_mturk_connection(requester_object, dict())
             
             mturk_client = mturk_clients['production']
 
@@ -315,9 +316,9 @@ def freeze(request, requester_aws, worker_signed):
     elif request.method == 'POST' and 'delete' in request.POST.keys():
         form = FreezeForm()
 
-        RequesterFreeze.objects.filter(worker=worker, requester=requester).delete()
+        RequesterFreeze.objects.filter(worker=worker, requester=requester_object).delete()
 
-        to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
+        to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester_object)
 
         for assignmentaudit in AssignmentAudit.objects.filter(frozen=True):
             for assignment in to_unfreeze:
