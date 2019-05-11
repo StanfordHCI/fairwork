@@ -323,7 +323,7 @@ def freeze(request, requester, worker_signed):
 
         to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester_object)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(closed=False).(frozen=True):
+        for assignmentaudit in AssignmentAudit.objects.filter(closed=False).filter(frozen=True):
             for assignment in to_unfreeze:
                 if assignment.id == assignmentaudit.assignment_id:
                     assignmentaudit.frozen = False
