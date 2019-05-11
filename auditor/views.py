@@ -237,9 +237,9 @@ def script(request):
 
     return render(request, 'script.html', context)
 
-def freeze(request, requester, worker_signed):
+def freeze(request, requester_aws, worker_signed):
     signer = Signer(salt=auditpayments.get_salt())
-    requester = Requester.objects.get(aws_account = requester)
+    requester = Requester.objects.get(aws_account = requester_aws)
     worker_id = signer.unsign(worker_signed)
     worker = Worker.objects.get(id = worker_id)
 
@@ -286,7 +286,7 @@ def freeze(request, requester, worker_signed):
             # set assignment audit as frozen here
             to_freeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester)
 
-            for assignmentaudit in AssignmentAudit.objects.all():
+            for assignmentaudit in AssignmentAudit.objects.filter(closed=False):
                 for assignment in to_freeze:
                     if assignment.id == assignmentaudit.assignment_id:
                         assignmentaudit.frozen = True
@@ -296,7 +296,7 @@ def freeze(request, requester, worker_signed):
             # show banner to requester saying that you froze worker
             # send email to worker saying you're frozen
             # need to get some sort of Mturk object...
-
+            print(requester)
             mturk_clients = get_mturk_connection(requester, dict())
             
             mturk_client = mturk_clients['production']
