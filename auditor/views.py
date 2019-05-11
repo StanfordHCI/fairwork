@@ -298,15 +298,18 @@ def freeze(request, requester, worker_signed):
             # need to get some sort of Mturk object...
             print(requester)
             print(requester_object)
+            print(requester_object.key)
+            print(requester_object.secret)
             mturk_clients = get_mturk_connection(requester_object, dict())
             
             mturk_client = mturk_clients['production']
+            print(mturk_client)
 
             try:
                 subject = "Frozen"
                 message = "Test"
                 # If a requester is being unreasonable please email 
-                response = mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
+                mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
 
             except mturk_client.exceptions.RequestError as e:
                 print(e)
