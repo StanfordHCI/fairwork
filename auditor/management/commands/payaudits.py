@@ -37,8 +37,6 @@ class Command(BaseCommand):
         for is_sandbox in [True, False]:
             self.stdout.write(self.style.WARNING('Sandbox mode: %s' % is_sandbox))
 
-            testaudits = AssignmentAudit.objects.filter(closed = False).filter(needsPayment = True)
-
             audits = AssignmentAudit.objects.filter(closed = False).filter(needsPayment = True).filter(message_sent__lte = grace_period_limit)
 
             if is_sandbox:
@@ -91,7 +89,6 @@ class Command(BaseCommand):
             # Maybe now just turn everything into closed...
             for unpaid_task in assignments_to_bonus:
                 unpaid_task.closed = True
-                unpaid_task.needsPayment = False
                 unpaid_task.save()
         except mturk_client.exceptions.RequestError as e:
             if e.response['Error']['Message'].startswith("This Requester has insufficient funds in their account to complete this transaction."):
@@ -102,7 +99,6 @@ class Command(BaseCommand):
                 # They already paid it, mark it as done
                 for unpaid_task in assignments_to_bonus:
                     unpaid_task.closed = True
-                    unpaid_task.needsPayment = False
                     unpaid_task.save()
             else:
                 self.stderr.write(self.style.ERROR(e))
