@@ -249,9 +249,9 @@ def freeze(request, requester, worker_signed):
     for status in statuses:
         audits = AssignmentAudit.objects.filter(assignment__hit__hit_type__requester = requester_object).filter(message_sent__isnull = False)
         if status == 'pending':
-            audits = audits.filter(needsPayment = True)
+            audits = audits.filter(closed=False).filter(needsPayment=True)
         elif status == 'completed':
-            audits = audits.filter(closed = True)
+            audits = audits.filter(closed = True).filter(needsPayment=True)
         else:
             raise Exception("Unknown status: %s" (status))
 
@@ -302,7 +302,7 @@ def freeze(request, requester, worker_signed):
             print(requester_object.secret)
             mturk_clients = get_mturk_connection(requester_object, dict())
             
-            mturk_client = mturk_clients['production']
+            mturk_client = mturk_clients['sandbox']
             print(mturk_client)
 
             try:
@@ -323,7 +323,7 @@ def freeze(request, requester, worker_signed):
 
         to_unfreeze = Assignment.objects.filter(worker=worker).filter(hit__hit_type__requester_id = requester_object)
 
-        for assignmentaudit in AssignmentAudit.objects.filter(frozen=True):
+        for assignmentaudit in AssignmentAudit.objects.filter(closed=False).(frozen=True):
             for assignment in to_unfreeze:
                 if assignment.id == assignmentaudit.assignment_id:
                     assignmentaudit.frozen = False
