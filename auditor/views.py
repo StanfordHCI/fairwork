@@ -308,7 +308,7 @@ def freeze(request, requester, worker_signed):
                 response = mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
 
             except mturk_client.exceptions.RequestError as e:
-                self.stderr.write(self.style.ERROR(e))
+                print(e)
 
             call_command('auditpayments')
 
