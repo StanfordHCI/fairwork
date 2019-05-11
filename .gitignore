@@ -105,3 +105,5 @@ db.sqlite3
 local_settings.py
 .DS_Store
 staticfiles/staticfiles.json
+fairwork_server/settings.py
+fairwork_server/local_settings.py
