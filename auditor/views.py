@@ -296,23 +296,28 @@ def freeze(request, requester, worker_signed):
             # show banner to requester saying that you froze worker
             # send email to worker saying you're frozen
             # need to get some sort of Mturk object...
-            print(requester)
-            print(requester_object)
-            print(requester_object.key)
-            print(requester_object.secret)
+
             mturk_clients = get_mturk_connection(requester_object, dict())
-            
-            mturk_client = mturk_clients['sandbox']
-            print(mturk_client)
 
-            try:
-                subject = "Frozen"
-                message = "Test"
-                # If a requester is being unreasonable please email 
-                mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
+            for is_sandbox in [True, False]:
+                if is_sandbox:
+                    mturk_client = mturk_clients['sandbox']
+                else:
+                    mturk_client = mturk_clients['production']
 
-            except mturk_client.exceptions.RequestError as e:
-                print(e)
+                try:
+                    subject = "Fair Work Payments Frozen"
+                    message = "A requester has frozen your Fair Work bonus payments. The following is our record of the times you have reported through Fair Work"
+                    for assignment in to_freeze:
+                        d = AssignmentDuration.objects.get(assignment_id=assignment)
+                        h = HIT.objects.get(id=assignment.hit_id)
+                        message += "<li>Your reported time for HIT Type" + str(h.hit_type_id) + ": " + str(d.duration) + "</li>"
+                    message += "If you believe that your bonus payments should not have been frozen, you can contact the requester through email at " + str(requester_object.email)
+                    # If a requester is being unreasonable please email 
+                    mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
+
+                except mturk_client.exceptions.RequestError as e:
+                    print(e)
 
             call_command('auditpayments')
 
