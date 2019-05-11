@@ -309,7 +309,7 @@ def freeze(request, requester, worker_signed):
                     subject = "Fair Work Payments Frozen"
                     message = "A requester has frozen your Fair Work bonus payments. The requester gave the following reason for freezing your bonus payments: \n\n"
                     message += "\"" + form.cleaned_data['reason'] + "\"" + "\n\n"
-                    message += "If you believe that your bonus payments were frozen unfairly, you can contact the requester through email at " + str(requester_object.email)
+                    message += "We ask requesters to only freeze payments if there is a major issue. If this freeze was done in error, please first try to contact the requester at " + str(requester_object.email) + ". If the requester is not responding or is responding in bad faith, our email is " + settings.ADMIN_EMAIL
                     # If a requester is being unreasonable please email 
                     mturk_client.notify_workers(Subject = subject, MessageText = message, WorkerIds = [worker_id])
 
