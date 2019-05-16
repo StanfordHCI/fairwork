@@ -37,13 +37,15 @@
         var aws_account = getUrlParameter("aws_account");
         var is_sandbox = getUrlParameter("turkSubmitTo").includes("sandbox");
         var host = is_sandbox ? "mechanicalturk.sandbox.amazonaws.com" : "mechanicalturk.amazonaws.com";
+        var estimated_time = document.getElementById("estimatedtimevalue").value;
         var data = {
           'assignment_id': assignment_id,
           'worker_id': worker_id,
           'hit_id': hit_id,
           'host': host,
           'duration': time,
-          'aws_account': aws_account
+          'aws_account': aws_account,
+          'estimated_time': estimated_time
         };
 
         var http = new XMLHttpRequest();
@@ -161,6 +163,7 @@
 
       function receiveMessage(event) {
         if ((event.origin === "https://workersandbox.mturkcontent.com" || event.origin === "https://mturkcontent.com") && event.data['status'] === "estimatedTime") {
+          console.log(event.data['value'])
           updateEstimatedTime(event.data['value']);
         }
       }
@@ -173,6 +176,10 @@
         }
         var estimatedTime = document.getElementById('estimatedtimelink')
         estimatedTime.innerHTML = 'Estimated time: ' + roundedMinutes + ' minute' + (roundedMinutes == 1 ? "" : "s");
+
+        var estimatedTimeValue = document.getElementById('estimatedtimevalue')
+        estimatedTimeValue.value = roundedMinutes
+
         estimatedTime.onclick = function() {
           document.getElementById('fairwork-min').value = roundedMinutes;
           reportTime();
@@ -364,6 +371,7 @@
         </div>
         <div>
           <span id="estimatedtime">
+            <input type="hidden" id="estimatedtimevalue">
             <a id="estimatedtimelink" href="#">Estimated time: 0 minutes</a>
           </span>
         </div>

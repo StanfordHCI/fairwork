@@ -127,6 +127,7 @@ def assignment_duration(request):
         r = hit_type.requester
 
     strTime = __get_POST_param(request, 'duration')
+    estTime = __get_POST_param(request, 'estimated_time')
     if (strTime == ""):
         AssignmentDuration.objects.filter(assignment=assignment).delete()
 
@@ -136,10 +137,14 @@ def assignment_duration(request):
             minutes = float(strTime)
             duration = timedelta(minutes=minutes)
 
+            est_minutes = float(estTime)
+            measured_time = timedelta(minutes=est_minutes)
+
             at, created = AssignmentDuration.objects.update_or_create(
                 assignment = assignment,
                 defaults = {
-                    'duration': duration
+                    'duration': duration,
+                    'measured_time': measured_time
                 }
             )
 
@@ -179,7 +184,7 @@ def requester(request):
 
 @csrf_exempt
 def load_js(request):
-    aws_account = request.GET['aws_account']
+    aws_account = request.GET.get('aws_account')
     context = {
         'AWS_ACCOUNT': aws_account,
         'IFRAME_URL': request.build_absolute_uri('iframe'),
@@ -200,7 +205,7 @@ def iframe(request):
         'FAIRWORK_DOMAIN': request.build_absolute_uri('/'),
         'IRB_AGREEMENT': "False",
         'WORKER_IRB': settings.WORKER_IRB_TEMPLATE,
-        'MIN_WAGE': settings.MINIMUM_WAGE_PER_HOUR
+        'MIN_WAGE': settings.MINIMUM_WAGE_PER_HOUR,
     }
     if worker_id:
         w, w_created = Worker.objects.get_or_create(id = worker_id)

@@ -5,6 +5,7 @@ from django.utils.translation import ugettext as _
 
 import fernet_fields
 from decimal import Decimal
+from datetime import timedelta
 
 class Requester(models.Model):
     # EncryptedCharField cannot serve as a primary key or lookup field
@@ -73,6 +74,7 @@ class Assignment(models.Model):
 class AssignmentDuration(models.Model):
     assignment = models.OneToOneField(Assignment, on_delete=models.CASCADE)
     duration = models.DurationField()
+    measured_time = models.DurationField(default=timedelta)
     timestamp = models.DateTimeField(auto_now=True)
 
     def __str__(self):
