@@ -128,29 +128,29 @@ def assignment_duration(request):
 
     strTime = __get_POST_param(request, 'duration')
     estTime = __get_POST_param(request, 'estimated_time')
-    if (strTime == ""):
-        AssignmentDuration.objects.filter(assignment=assignment).delete()
+    # if (strTime == ""):
+    #     AssignmentDuration.objects.filter(assignment=assignment).delete()
 
-        return HttpResponse("Deleted duration for %s" % (assignment))        
-    else:
-        try:
-            minutes = float(strTime)
-            duration = timedelta(minutes=minutes)
+    #     return HttpResponse("Deleted duration for %s" % (assignment))        
+    # else:
+    try:
+        minutes = float(strTime)
+        duration = timedelta(minutes=minutes)
 
-            est_minutes = float(estTime)
-            measured_time = timedelta(minutes=est_minutes)
+        est_minutes = float(estTime)
+        measured_time = timedelta(minutes=est_minutes)
 
-            at, created = AssignmentDuration.objects.update_or_create(
-                assignment = assignment,
-                defaults = {
-                    'duration': duration,
-                    'measured_time': measured_time
-                }
-            )
+        at, created = AssignmentDuration.objects.update_or_create(
+            assignment = assignment,
+            defaults = {
+                'duration': duration,
+                'measured_time': measured_time
+            }
+        )
 
-            return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
-        except ValueError:
-            return HttpResponse("Not a valid input")
+        return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
+    except ValueError:
+        return HttpResponse("Not a valid input")
 
 @csrf_exempt
 def irb_agreement(request):

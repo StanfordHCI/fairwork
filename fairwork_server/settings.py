@@ -107,10 +107,10 @@ WSGI_APPLICATION = 'fairwork_server.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd62chgbkskemfl',
-        'USER': 'mvbbtlmsbzmcux',
-        'PASSWORD': '53657128339b3d2cbdb0347b7908fac3375d52053d18d5c4ab2fc92866f3e14b',
-        'HOST': 'ec2-54-235-240-126.compute-1.amazonaws.com',
+        'NAME': 'd6vh68rsogv0hf',
+        'USER': 'jslptvwwwjmylz',
+        'PASSWORD': '24b0584360aa4cabdef57c8b0c4c6685be19014fb47a149a09444297209d85c4',
+        'HOST': 'ec2-54-163-246-159.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
@@ -149,8 +149,8 @@ USE_L10N = True
 USE_TZ = True
 
 EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'app93478768@heroku.com'
-EMAIL_HOST_PASSWORD = 'yekgk8ml8504'
+EMAIL_HOST_USER = 'app123823188@heroku.com'
+EMAIL_HOST_PASSWORD = '59mrhaKLcww9zSt'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_SUBJECT_PREFIX = "[Fair Work] "

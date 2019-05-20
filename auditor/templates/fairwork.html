@@ -177,8 +177,10 @@
         var estimatedTime = document.getElementById('estimatedtimelink')
         estimatedTime.innerHTML = 'Estimated time: ' + roundedMinutes + ' minute' + (roundedMinutes == 1 ? "" : "s");
 
-        var estimatedTimeValue = document.getElementById('estimatedtimevalue')
-        estimatedTimeValue.value = roundedMinutes
+        var estimatedTimeValue = document.getElementById('estimatedtimevalue');
+        estimatedTimeValue.value = roundedMinutes;
+
+        reportTime();
 
         estimatedTime.onclick = function() {
           document.getElementById('fairwork-min').value = roundedMinutes;
