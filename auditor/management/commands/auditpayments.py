@@ -73,16 +73,11 @@ class Command(BaseCommand):
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(duration=timedelta(0)).exclude(assignment__worker__in=frozen_workers).distinct()
-                print("duration query")
-                print(duration_query)
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
                     median_duration = median(duration_query.values_list('duration', flat=True))
                     hit_durations.append(median_duration)
-
-                print("hit durations")
-                print(hit_durations)
 
             # now, hit_durations contains the median reported time for each HIT
             # that has at least one assignment needing an audit.
@@ -94,7 +89,11 @@ class Command(BaseCommand):
                 estimated_rate = None
             else:
                 estimated_time = median(hit_durations)
-                estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
+                estimated_rate = 0
+
+                if Decimal(estimated_time.total_seconds()) != 0:
+                    estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
+
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
