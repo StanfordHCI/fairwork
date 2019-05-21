@@ -94,10 +94,15 @@ class Command(BaseCommand):
                 estimated_rate = None
             else:
                 estimated_time = median(hit_durations)
+                print("estimated time")
+                print(estimated_time)
                 estimated_rate = 0
 
                 if Decimal(estimated_time.total_seconds()) != 0:
                     estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
+
+                print("estimated rate")
+                print(estimated_rate)
 
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
@@ -206,6 +211,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
             summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. No bonus necessary.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, num_workers=len(workers), workers_plural=pluralize(len(workers)))
         else:
             paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
+            print("underpayment")
+            print(underpayment)
             bonus = underpayment.quantize(Decimal('1.000')).normalize() if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000'))
             paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
             if is_worker:
