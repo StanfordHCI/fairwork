@@ -72,7 +72,7 @@ class Command(BaseCommand):
                 frozen_workers = set(())
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
-                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).filter(duration=timedelta(0)).exclude(assignment__worker__in=frozen_workers).distinct()
+                duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(duration=timedelta(0)).exclude(assignment__worker__in=frozen_workers).distinct()
                 print("duration query")
                 print(duration_query)
 
