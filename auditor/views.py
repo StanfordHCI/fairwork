@@ -136,6 +136,7 @@ def assignment_duration(request):
     try:
         minutes = float(strTime)
         duration = timedelta(minutes=minutes)
+        print(duration)
 
         est_minutes = float(estTime)
         measured_time = timedelta(minutes=est_minutes)
