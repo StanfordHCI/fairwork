@@ -117,7 +117,7 @@ def most_recent_report(request):
 
 def is_float(str):
     try:
-        float(str)
+        dummy = float(str)
         return True
     except ValueError:
         return False
@@ -159,6 +159,8 @@ def assignment_duration(request):
             return HttpResponse("Not a valid input")        
     else:
         try:
+            minutes = 0
+
             if is_float(minutes):
                 minutes = float(strTime)
             else:
