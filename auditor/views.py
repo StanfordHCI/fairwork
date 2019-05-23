@@ -149,7 +149,8 @@ def assignment_duration(request):
             )
 
             return HttpResponse("Submitted %s: %s min." % (assignment, at.duration))
-        except ValueError:
+        except ValueError as e:
+            print(e)
             return HttpResponse("Not a valid input")
 
 @csrf_exempt
