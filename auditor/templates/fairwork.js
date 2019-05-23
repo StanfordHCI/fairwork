@@ -77,7 +77,7 @@
     var iframe = document.createElement('iframe');
     iframe.setAttribute('id', 'fairworkframe');
     iframe.setAttribute('src', url);
-    iframe.setAttribute('style', 'margin: 0; padding: 0; border: none; width: 100%; height: 300px;');
+    iframe.setAttribute('style', 'margin: 0; padding: 0; border: none; width: 100%; height: 500px;');
     document.body.appendChild(iframe);
     iframe.onload = addTimerScript;
 
