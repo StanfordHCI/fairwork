@@ -18,7 +18,7 @@ from auditor.management.commands.pullnotifications import get_mturk_connection
 from auditor.management.commands import auditpayments
 
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from collections import defaultdict
 import boto3
 from statistics import median
@@ -115,6 +115,12 @@ def most_recent_report(request):
             'duration': most_recent_report.duration
         })
 
+def is_float(str):
+    try:
+        float(str)
+        return True
+    except ValueError:
+        return False
 
 @csrf_exempt
 def assignment_duration(request):
@@ -128,6 +134,10 @@ def assignment_duration(request):
 
     strTime = __get_POST_param(request, 'duration')
     estTime = __get_POST_param(request, 'estimated_time')
+
+    print(strTime)
+    print(estTime)
+
     if (strTime == ""):
         # AssignmentDuration.objects.filter(assignment=assignment).delete()
 
@@ -149,9 +159,13 @@ def assignment_duration(request):
             return HttpResponse("Not a valid input")        
     else:
         try:
-            minutes = float(strTime)
+            if is_float(minutes):
+                minutes = float(strTime)
+            else:
+                full_time = datetime.strptime(strTime,"%H:%M:%S")
+                minutes = full_time.minute
+
             duration = timedelta(minutes=minutes)
-            print(duration)
 
             est_minutes = float(estTime)
             measured_time = timedelta(minutes=est_minutes)
