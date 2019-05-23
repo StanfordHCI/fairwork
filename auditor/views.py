@@ -117,7 +117,7 @@ def most_recent_report(request):
 
 def is_float(str):
     try:
-        dummy = float(str)
+        float(str)
         return True
     except ValueError:
         return False
@@ -143,8 +143,11 @@ def assignment_duration(request):
 
         # return HttpResponse("Deleted duration for %s" % (assignment))
         try:
-            est_minutes = float(estTime)
-            measured_time = timedelta(minutes=est_minutes)
+            measured_time = timedelta(0)
+
+            if is_float(estTime):
+                est_minutes = float(estTime)
+                measured_time = timedelta(minutes=est_minutes)
 
             at, created = AssignmentDuration.objects.update_or_create(
                 assignment = assignment,
@@ -159,18 +162,14 @@ def assignment_duration(request):
             return HttpResponse("Not a valid input")        
     else:
         try:
-            minutes = 0
-
-            if is_float(minutes):
-                minutes = float(strTime)
-            else:
-                full_time = datetime.strptime(strTime,"%H:%M:%S")
-                minutes = full_time.minute
-
+            minutes = float(strTime)
             duration = timedelta(minutes=minutes)
 
-            est_minutes = float(estTime)
-            measured_time = timedelta(minutes=est_minutes)
+            measured_time = timedelta(0)
+
+            if is_float(estTime):
+                est_minutes = float(estTime)
+                measured_time = timedelta(minutes=est_minutes)
 
             at, created = AssignmentDuration.objects.update_or_create(
                 assignment = assignment,
