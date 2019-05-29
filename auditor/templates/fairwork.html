@@ -167,6 +167,9 @@
 
       function receiveMessage(event) {
         console.log("received message")
+        console.log(event)
+        console.log(event.origin)
+        console.log(event.data['value'])
         if ((event.origin === "https://workersandbox.mturkcontent.com" || event.origin === "https://mturkcontent.com") && event.data['status'] === "estimatedTime") {
           console.log(event.data['value'])
           updateEstimatedTime(event.data['value']);
