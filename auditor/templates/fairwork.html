@@ -166,6 +166,7 @@
       }
 
       function receiveMessage(event) {
+        print("received message")
         if ((event.origin === "https://workersandbox.mturkcontent.com" || event.origin === "https://mturkcontent.com") && event.data['status'] === "estimatedTime") {
           console.log(event.data['value'])
           updateEstimatedTime(event.data['value']);
@@ -183,6 +184,9 @@
 
         var estimatedTimeValue = document.getElementById('estimatedtimevalue');
         estimatedTimeValue.value = roundedMinutes;
+
+        console.log("minutes")
+        console.log(roundedMinutes)
 
         reportTime();
 
