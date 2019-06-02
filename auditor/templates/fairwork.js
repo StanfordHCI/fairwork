@@ -26,7 +26,7 @@
           currentPageName: getUrlParameter("assignmentId"), // current page
           idleTimeoutInSeconds: 30 // seconds
       });
-      window.setInterval(checkEstimatedTime, 1000);
+      window.setInterval(checkEstimatedTime, 10000);
     }
     document.head.appendChild(newScript);
     newScript.src = "https://cdnjs.cloudflare.com/ajax/libs/TimeMe.js/2.0.0/timeme.min.js";

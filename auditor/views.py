@@ -401,6 +401,7 @@ def __get_assignment_info(request):
     h = HIT.objects.get(
         id = hit_id
     )
+    print(h)
     ht = h.hit_type
     w, w_created = Worker.objects.get_or_create(
         id = worker_id
