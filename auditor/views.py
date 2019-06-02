@@ -124,6 +124,7 @@ def is_float(str):
 
 @csrf_exempt
 def assignment_duration(request):
+    print(request)
     hit, hit_type, worker, assignment = __get_assignment_info(request)
 
     if 'aws_account' in request.POST: # this is coming from JS, where we won't have called create_hit
@@ -393,6 +394,7 @@ def freeze(request, requester, worker_signed):
 
 def __get_assignment_info(request):
     hit_id = __get_POST_param(request, 'hit_id')
+    print(hit_id)
     worker_id = __get_POST_param(request, 'worker_id')
     assignment_id = __get_POST_param(request, 'assignment_id')
 
