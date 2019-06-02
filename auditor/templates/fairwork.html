@@ -173,7 +173,7 @@
 
       function updateEstimatedTime(estimated) {
         var minutes = estimated / 60;
-        var roundedMinutes = minutes;
+        var roundedMinutes = minutes.toFixed(2);
         // var roundedMinutes = Math.floor(minutes);
         // if (estimated % 60 >= 30) {
         //   roundedMinutes = roundedMinutes + 0.5;
