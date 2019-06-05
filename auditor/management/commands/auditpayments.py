@@ -73,16 +73,11 @@ class Command(BaseCommand):
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(duration=timedelta(0)).exclude(assignment__worker__in=frozen_workers).distinct()
-                print("duration query")
-                print(duration_query)
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
                     median_duration = median(duration_query.values_list('duration', flat=True))
                     hit_durations.append(median_duration)
-
-                print("hit durations")
-                print(hit_durations)
 
             # now, hit_durations contains the median reported time for each HIT
             # that has at least one assignment needing an audit.
@@ -94,15 +89,10 @@ class Command(BaseCommand):
                 estimated_rate = None
             else:
                 estimated_time = median(hit_durations)
-                print("estimated time")
-                print(estimated_time)
                 estimated_rate = 0
 
                 if Decimal(estimated_time.total_seconds()) != 0:
                     estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
-
-                print("estimated rate")
-                print(estimated_rate)
 
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
@@ -211,8 +201,6 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
             summary = "HIT Type {hittype:s} originally paid ${payment:.2f} per task. Median estimated time across {num_workers:d} worker{workers_plural:s} was {estimated:s}, for an estimated rate of ${paymentrate:.2f}/hr. No bonus necessary.".format(hittype = hit_type.id, payment = hit_type.payment, estimated = time_nomicroseconds, paymentrate = hittype_assignments[0].estimated_rate, num_workers=len(workers), workers_plural=pluralize(len(workers)))
         else:
             paymentrevised = hit_type.payment + hittype_assignments[0].get_underpayment()
-            print("underpayment")
-            print(underpayment)
             bonus = underpayment.quantize(Decimal('1.000')).normalize() if underpayment >= Decimal(0.01) else underpayment.quantize(Decimal('1.000'))
             paymentrevised = paymentrevised.quantize(Decimal('1.000')).normalize() if paymentrevised >= Decimal(0.01) else paymentrevised.quantize(Decimal('1.000'))
             if is_worker:
