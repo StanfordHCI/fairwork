@@ -49,7 +49,7 @@ class Command(BaseCommand):
             for requester in requesters:
                 self.stdout.write(self.style.WARNING('Requester: %s %s' % (requester.aws_account, requester.email)))
 
-                requester_to_bonus = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker')
+                requester_to_bonus = audits.filter(assignment__hit__hit_type__requester = requester).order_by('assignment__hit', 'assignment__hit__hit_type', 'assignment__worker').filter(frozen = False)
 
                 workers = Worker.objects.filter(assignment__assignmentaudit__in = requester_to_bonus).distinct()
                 for worker in workers:
@@ -57,7 +57,7 @@ class Command(BaseCommand):
                     self.__bonus_worker(worker, assignments_to_bonus, requester, is_sandbox)
 
                 # The assignments still listed as unpaid indicate that the requester didn't have sufficient funds
-                still_unpaid = requester_to_bonus.filter(needsPayment = True).filter(frozen = False)
+                still_unpaid = requester_to_bonus.filter(needsPayment = True)
                 still_unpaid = still_unpaid.all() # refreshes the queryset from the DB, since we just changed payment status of a bunch of items
                 if len(still_unpaid) > 0:
                     self.__notify_insufficient_funds_requester(requester, still_unpaid)
