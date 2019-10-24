@@ -59,13 +59,7 @@ class Command(BaseCommand):
         else:
             auditable = auditable.exclude(hit__hit_type__host__contains = 'sandbox')
 
-        print("AUDITABLE")
-        print(auditable)
-
         hit_type_query = HITType.objects.filter(hit__assignment__in=auditable).distinct()
-
-        print("HIT TYPE QUERY")
-        print(hit_type_query)
 
         for hit_type in hit_type_query:
             # Get the HITs that need auditing
@@ -78,6 +72,11 @@ class Command(BaseCommand):
                 frozen_workers = set(())
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
+
+
+                test_duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).distinct()
+                print("TEST DURATION QUERY")
+                print(test_duration_query)
 
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
 
@@ -94,6 +93,8 @@ class Command(BaseCommand):
             estimated_rate = None
                 
             if len(hit_durations) != 0:
+                print("HIT DURATIONS")
+                print(hit_durations)
                 estimated_time = median(hit_durations)
                 estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
                 if estimated_rate == 0:
