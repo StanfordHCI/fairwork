@@ -79,40 +79,35 @@ class Command(BaseCommand):
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
 
-                print("ASSIGNMENT HIT")
-                print(hit)
-
-                print("FROZEN WORKERS")
-                print(frozen_workers)
-
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
-
-                print("DURATION QUERY")
-                print(duration_query)
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
                     median_duration = median(duration_query.values_list('duration', flat=True))
                     hit_durations.append(median_duration)
 
-            print("HIT DURATIONS")
-            print(hit_durations)
-
             # now, hit_durations contains the median reported time for each HIT
             # that has at least one assignment needing an audit.
             # next step: take the median of the medians across these HITs to
             # calculate the overall effective time
-            if len(hit_durations) == 0:
-                # nobody reported anything
-                estimated_time = None
-                estimated_rate = None
-            else:
+            estimated_time = None
+            estimated_rate = None
+                
+            if len(hit_durations) != 0:
                 estimated_time = median(hit_durations)
                 estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
                 if estimated_rate == 0:
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
             hit_assignments = auditable.filter(hit__in = hit_query).distinct()
+
+            print("HIT ASSIGNMENTS")
+            print(hit_assignments)
+            print("ESTIMATED TIME")
+            print(estimated_time)
+            print("ESTIMATED RATE")
+            print(estimated_rate)
+
             for assignment in hit_assignments:
                 # first check if there is already assignmentaudit for assignmentid
                 if assignment.id in current_audit_assignment_ids:
