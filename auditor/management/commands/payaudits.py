@@ -83,10 +83,6 @@ class Command(BaseCommand):
             mturk_client = mturk_clients['production']
 
         try:
-            print("WORKER ID")
-            print(worker.id)
-            print("ASSIGNMENT ID")
-            print(assignment_to_bonus.assignment.id)
             response = mturk_client.send_bonus(WorkerId = worker.id, BonusAmount = '%.2f' % (total_unpaid), AssignmentId = assignment_to_bonus.assignment.id, Reason = message, UniqueRequestToken = token)
 
             # Once the bonus is sent, mark the audits as paid
