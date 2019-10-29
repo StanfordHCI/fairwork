@@ -79,6 +79,9 @@ class Command(BaseCommand):
 
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
 
+                print("ACTUAL DURATION QUERY")
+                print(duration_query)
+
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
                     median_duration = median(duration_query.values_list('duration', flat=True))
@@ -90,10 +93,11 @@ class Command(BaseCommand):
             # calculate the overall effective time
             estimated_time = None
             estimated_rate = None
+
+            print("HIT DURATIONS")
+            print(hit_durations)
                 
             if len(hit_durations) != 0:
-                print("HIT DURATIONS")
-                print(hit_durations)
                 estimated_time = median(hit_durations)
                 estimated_rate = Decimal(hit_type.payment / Decimal(estimated_time.total_seconds() / (60*60))).quantize(Decimal('.01'))
                 if estimated_rate == 0:
