@@ -73,14 +73,7 @@ class Command(BaseCommand):
                 for freeze_object in RequesterFreeze.objects.filter(requester_id = req_id):
                     frozen_workers.add(freeze_object.worker_id)
 
-                test_duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).distinct()
-                print("TEST DURATION QUERY")
-                print(test_duration_query)
-
                 duration_query = AssignmentDuration.objects.filter(assignment__hit = hit).exclude(assignment__worker__in=frozen_workers).distinct()
-
-                print("ACTUAL DURATION QUERY")
-                print(duration_query)
 
                 # Take the median report for all assignments in that HIT
                 if len(duration_query) > 0:
@@ -93,9 +86,6 @@ class Command(BaseCommand):
             # calculate the overall effective time
             estimated_time = None
             estimated_rate = None
-
-            print("HIT DURATIONS")
-            print(hit_durations)
                 
             if len(hit_durations) != 0:
                 estimated_time = median(hit_durations)
@@ -104,13 +94,6 @@ class Command(BaseCommand):
                     estimated_rate = Decimal('0.01') # minimum accepted Decimal value, $0.01 per hour
 
             hit_assignments = auditable.filter(hit__in = hit_query).distinct()
-
-            print("HIT ASSIGNMENTS")
-            print(hit_assignments)
-            print("ESTIMATED TIME")
-            print(estimated_time)
-            print("ESTIMATED RATE")
-            print(estimated_rate)
 
             for assignment in hit_assignments:
                 # first check if there is already assignmentaudit for assignmentid
