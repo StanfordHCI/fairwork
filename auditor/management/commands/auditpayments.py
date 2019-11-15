@@ -209,6 +209,8 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         # anon_worker_id = 1
 
+        frozen_workers = RequesterFreeze.objects.filter(requester_id = requester.id).values_list('worker_id', flat=True)
+
         if not is_worker:
             for worker in workers:
                 duration_query = AssignmentDuration.objects.filter(assignment__worker = worker).filter(assignment__hit__hit_type = hit_type).filter(assignment__assignmentaudit__in = assignments_to_bonus)
@@ -220,6 +222,10 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
                     #     s += "Worker " + str(anon_worker_id) + ": "
                     #     anon_worker_id += 1
                     # else:
+                    freeze_label = "Freeze"
+                    if worker in frozen_workers:
+                        s += "<b>The following worker is frozen: </b>"
+                        freeze_label = "Unfreeze"
                     s += "Worker %s: " % worker.id
                     s += "{num_reports:d} report{report_plural:s}, median duration {median_duration:s}. ".format(num_reports=len(duration_query), report_plural=pluralize(len(duration_query)), median_duration=median_nomicroseconds)
                     if not is_worker:
@@ -227,9 +233,9 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
                         freeze_url = settings.HOSTNAME + reverse('freeze', kwargs={'requester': requester.aws_account, 'worker_signed': worker_signed})
 
                         if is_html:
-                            s += "<a href='{freeze_url:s}'>Freeze this worker's payment</a>".format(freeze_url=freeze_url)
+                            s += "<a href='{freeze_url:s}'>" + freeze_label + " this worker's payment</a>".format(freeze_url=freeze_url)
                         else:
-                            s += "Freeze this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
+                            s += freeze_label + " this worker's payment: {freeze_url:s}".format(freeze_url=freeze_url)
                     s += "</li>" if is_html else "\n"
                 # maybe else say something like this worker is probably frozen
 
