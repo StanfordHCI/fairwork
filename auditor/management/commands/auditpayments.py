@@ -209,7 +209,9 @@ def audit_list_message(assignments_to_bonus, requester, is_worker, is_html, is_s
 
         # anon_worker_id = 1
 
-        frozen_workers = RequesterFreeze.objects.filter(requester_id = requester.id).values_list('worker_id', flat=True)
+        print(requester)
+        frozen_workers = []
+        #frozen_workers = RequesterFreeze.objects.filter(requester_id = requester.id).values_list('worker_id', flat=True)
 
         if not is_worker:
             for worker in workers:
