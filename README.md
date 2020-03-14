@@ -53,3 +53,21 @@ Send the payments to workers after requesters have had time to read the email --
 ```shell
 python manage.py payaudits --settings=fairwork_server.local_settings
 ```
+
+## Citing Fair Work
+[Download the paper here](https://hci.stanford.edu/publications/2019/fairwork/fairwork-hcomp2019.pdf), and cite this work as:
+
+>Whiting, Mark E., Grant Hugh, and Michael S. Bernstein. "Fair Work: Crowd Work Minimum Wage with One Line of Code." Proceedings of the AAAI Conference on Human Computation and Crowdsourcing. Vol. 7. No. 1. 2019.
+
+Or with BibTeX:
+```BibTeX
+@inproceedings{whiting2019fair,
+  title={Fair Work: Crowd Work Minimum Wage with One Line of Code},
+  author={Whiting, Mark E and Hugh, Grant and Bernstein, Michael S},
+  booktitle={Proceedings of the AAAI Conference on Human Computation and Crowdsourcing},
+  volume={7},
+  number={1},
+  pages={197--206},
+  year={2019}
+}
+```
