@@ -6,7 +6,7 @@ bs4==0.0.1
 cffi==1.11.5
 cryptography==2.2.2
 dj-database-url==0.5.0
-Django==2.0.5
+Django==2.2.24
 django-cors-headers==2.2.0
 django-fernet-fields==0.5
 django-heroku==0.3.1
