@@ -7,8 +7,7 @@
   <p>
     <ol>
       <li><a href="{% url 'keys' %}">Register your API keys with the Fair Work server</a>.</li>
-      <li>Put the JavaScript link that the server gives you into the HTML of your HIT. The JavaScript will look something like:<br/><code>&#x3C;script src=&#x22;{{ request.scheme }}://{{ request.get_host }}{% url 'load_js' %}?aws_account=12345&#x22;&#x3E;&#x3C;/script&#x3E;</code><br/>
-      The account number at the end identifies your HITs to the server.</li>
+      <li>Add the Fair Work script from registration into the HTML of your HIT.</li>
     </ol>
   </p>
 
@@ -34,9 +33,20 @@
   <h5>I have an even cleverer point suggesting that I might not be able to trust workers' self reports. Might my clever rebuttal be right?</h5>
   <p>Yes. But you are using this tool because you want to help ensure fair treatment to workers, right? Fair treatment starts with trusting workers. They will make good faith estimates.</p>
 
-
-
-
-
+  <h5>Paper</h5>
+  <p>Download the paper <a href="https://hci.stanford.edu/publications/2019/fairwork/fairwork-hcomp2019.pdf" target="_blank">here</a>, and cite this work as:</p>
+  <blockquote>Whiting, Mark E., Grant Hugh, and Michael S. Bernstein. "Fair Work: Crowd Work Minimum Wage with One Line of Code." Proceedings of the AAAI Conference on Human Computation and Crowdsourcing. Vol. 7. No. 1. 2019.</blockquote>
+  <p>Or with BibTeX:</p>
+  <pre>
+  @inproceedings{whiting2019fair,
+    title={Fair Work: Crowd Work Minimum Wage with One Line of Code},
+    author={Whiting, Mark E and Hugh, Grant and Bernstein, Michael S},
+    booktitle={Proceedings of the AAAI Conference on Human Computation and Crowdsourcing},
+    volume={7},
+    number={1},
+    pages={197--206},
+    year={2019}
+  }
+  </pre>
 
 {% endblock %}
